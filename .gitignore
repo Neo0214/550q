@@ -36,3 +36,9 @@ CMakeFiles
 .vs
 main.dir
 Debug
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.cmake
+*.txt
