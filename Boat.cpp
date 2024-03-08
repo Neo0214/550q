@@ -1,4 +1,4 @@
-#include "defines.h"
+#include "Boat.h"
 
 Boat::Boat(int _id, int _capacity)
 {

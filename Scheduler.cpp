@@ -1,4 +1,4 @@
-#include "defines.h"
+#include "Scheduler.h"
 
 Scheduler::Scheduler() {
 	map = Map();
@@ -17,7 +17,7 @@ Scheduler::Scheduler() {
 				map.setPoint(i, j, WALL);
 			}
 			else if (line[j] == 'A') {
-				map.setPoint(i, j, ROBOT); // 或许可以直接按空地处理？
+				map.setPoint(i, j, EMPTY); // 直接按空地处理
 				this->robot[robotCount++]=Robot(i,j);
 			}
 			else if (line[j] == 'B') {
@@ -28,8 +28,10 @@ Scheduler::Scheduler() {
 	}
 	// 10行港口
 	int x, y, id, time, velocity;
+	Coord harborsCoord[10];
 	for (int i = 0; i < 10; i++) {
 		scanf("%d %d %d %d %d", &id, &x, &y, &time, &velocity);
+		harborsCoord[i] = Coord(x, y);
 		harbor[i] = Harbor(id, x, y, time, velocity);
 	}
 	int capacity;
@@ -37,6 +39,20 @@ Scheduler::Scheduler() {
 	for (int i = 0; i < 5; i++) {
 		boat[i] = Boat(i, capacity);
 	}
+
+
+	//初始化路径规划器
+
+	pathPlanner.initHarborPath(map.point,harborsCoord);
+
+	//test
+	auto moves = pathPlanner.getPathToHarbor(0, Coord(100, 100));
+	for (auto move : moves)
+	{
+		cerr<<move<<endl;
+	}
+
+
 	// 结尾
 	char end[100];
 	scanf("%s",end);

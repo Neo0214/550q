@@ -1,7 +1,8 @@
-#include "defines.h"
+#include "Map.h"
 
-short* Map::getMoveCommand(int harborId, int destX, int destY)
+short* Map::getMoveCommand(int srcX, int srcY, int destX, int destY)
 {
+
 	return NULL;
 }
 

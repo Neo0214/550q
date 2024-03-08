@@ -1,4 +1,4 @@
-#include "defines.h"
+#include "Robot.h"
 
 Robot::Robot(int _x, int _y) {
 	x=_x;
