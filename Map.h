@@ -24,14 +24,6 @@ public:
 public:
     Map();
     // 公共函数
-    /*
-    * 获取最短路径指令
-    * @param harborId：港口编号
-    * @param destX：目的地X坐标
-    * @param destY：目的地Y坐标
-    * @return short*： 指令数组，0-3，上右下左
-    */
-    short* getMoveCommand(int srcX, int srcY, int destX, int destY);
     void setGoods(int x, int y, int val, int overFrame);
     void setPoint(int x, int y, int type);
 };

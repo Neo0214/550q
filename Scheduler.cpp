@@ -70,6 +70,12 @@ bool Scheduler::NextFrame() {
 		int x, y, val;
 		scanf("%d %d %d", &x, &y, &val);
 		map.setGoods(x, y, val, frame + 1000);
+		int distanceToHarbors[HARBOR_NUM];
+		for (int i = 0; i < HARBOR_NUM; i++)
+		{
+			distanceToHarbors[i]=pathPlanner.getPathToHarbor(i,Coord(x,y)).size(); //时间有待优化
+		}
+		products.push_back(Product(x, y, val, frame + 1000, distanceToHarbors));
 	}
 	for (int i = 0; i < 10; i++) {
 		int hasGoods, x, y, status;
@@ -91,8 +97,56 @@ void Scheduler::writeCommand() {
 	// 输出指令
 }
 
+void Scheduler::RobotCommand(string command, int id, int direct)
+{
+	if (direct == -1) {
+		printf("%s %d\n", command.c_str(), id);
+		return;
+	}
+	printf("%s %d %d\n", command.c_str(), id, direct);
+}
+
+void Scheduler::findProductAndHarbor(int robotId)
+{
+	int startHarbor = robot[robotId].atHarbor;
+	Product bestProduct;
+	int bestHarborId =-1;
+	double maxProfitRate = 0;
+	for (Product product : products)
+	{
+		int nearestHarborId = product.getNearestHarborId();
+		int pathLen = product.distanceToHarbors[startHarbor] + product.distanceToHarbors[nearestHarborId];
+		double profitRate = (double)product.price / pathLen;
+		if(profitRate > maxProfitRate)
+		{
+			maxProfitRate=profitRate;
+			bestProduct=product;
+			bestHarborId=nearestHarborId;
+		}
+		robot[robotId].assignTask(pathPlanner.getPathFromHarbor(startHarbor,Coord(bestProduct.x,bestProduct.y)), bestHarborId);
+	}
+	
+
+}
+
 void Scheduler::Update() {
 	// 此处做决策，并输出指令
+	for (int i = 0; i < 10; i++) 
+	{
+		if (robot[i].target == -1) 
+		{
+			// 机器人没有目标，需要分配
+			if (robot[i].atHarbor == -1)
+			{
+				cerr << "无目标的机器人不在港口" << endl;
+				break; // TODO：不在港口的机器人的任务分配
+			}
+			findProductAndHarbor(i); //为第i个机器人分配任务
+		}
+	}
+
+
+
 	// 结尾
 	printf("OK\n");
 	fflush(stdout);

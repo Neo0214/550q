@@ -24,8 +24,8 @@ void PathPlanner::searchAllPath(const int my_map[LEN][LEN], Coord startCoord, Pa
 	{
 		Coord p = q.front();
 		q.pop();
-		//上右下左
-		Coord neighbors[4] = { Coord(p.x - 1,p.y),Coord(p.x,p.y + 1),Coord(p.x + 1,p.y),Coord(p.x,p.y - 1) };
+		//右左上下
+		Coord neighbors[4] = { Coord(p.x,p.y + 1),Coord(p.x,p.y - 1),Coord(p.x - 1,p.y),Coord(p.x + 1,p.y) };
 
 		for (int i = 0; i < 4; i++) //TODO：随机打乱
 		{

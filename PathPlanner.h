@@ -3,7 +3,6 @@
 #include "Map.h"
 
 constexpr int LEN = 200;
-constexpr int HARBOR_NUM = 10;
 
 
 struct Path
@@ -22,11 +21,11 @@ private:
 	Path*** haborsPaths;
 	Coord haborCoord[HARBOR_NUM];
 
-	int reverseMove[4] = { 2,3,0,1 };
+	int reverseMove[4] = { 1,0,3,2 };
 
 // 私有函数
 private:
-
+	// 搜索从startCoord开始的到所有点的路径
 	void searchAllPath(const int my_map[LEN][LEN],Coord startCoord, Path** path);
 
 

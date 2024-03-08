@@ -1,10 +1,6 @@
 #include "Map.h"
 
-short* Map::getMoveCommand(int srcX, int srcY, int destX, int destY)
-{
 
-	return NULL;
-}
 
 Map::Map()
 {
