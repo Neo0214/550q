@@ -1,8 +1,9 @@
 #include "Robot.h"
 
-Robot::Robot(int _x, int _y) {
-	x=_x;
-	y=_y;
+Robot::Robot(int id, int _x, int _y) {
+	this->id = id;
+	this->x=_x;
+	this->y=_y;
 	hasGoods=NO_GOODS;
 	status=ON;
 }
@@ -24,4 +25,18 @@ void Robot::assignTask(const vector<int>& moves, int target)
 	this->moves = moves;
 	this->curMoveCount = 0;
 	this->target = target;
+}
+
+void Robot::moveOneStep()
+{
+	if (curMoveCount < moves.size())
+	{
+		printf("move %d %d\n", id, moves[curMoveCount]);
+		curMoveCount++;
+	}
+	else
+	{
+		cerr<<id<<"fails to move"<<endl;
+		// printf("move %d %d\n", id, 1);
+	}
 }

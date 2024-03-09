@@ -16,14 +16,15 @@ private:
     Robot robot[10];
     vector<Product> products;
     
-    PathPlanner pathPlanner;
+    PathPlanner pathPlanner; // 路径规划器
+
     // 动态数据
     int frame; // 当前帧号
-    // 私有函数
-    void writeCommand();
-    void RobotCommand(string command,int id, int direct=-1);
 
+    // 私有函数
+    void findHarbor(int robotId);
     void findProductAndHarbor(int robotId);
+
 
 public:
     Scheduler();

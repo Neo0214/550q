@@ -3,13 +3,13 @@
 PathPlanner::PathPlanner()
 {
 	// 为harborsPaths分配内存为HARBOR_NUM*LEN*LEN
-	haborsPaths = new Path**[HARBOR_NUM];
+	harborsPaths = new Path**[HARBOR_NUM];
 	for (int i = 0; i < HARBOR_NUM; i++)
 	{
-		haborsPaths[i] = new Path*[LEN];
+		harborsPaths[i] = new Path*[LEN];
 		for (int j = 0; j < LEN; j++)
 		{
-			haborsPaths[i][j] = new Path[LEN];
+			harborsPaths[i][j] = new Path[LEN];
 		}
 	}
 }
@@ -20,6 +20,9 @@ void PathPlanner::searchAllPath(const int my_map[LEN][LEN], Coord startCoord, Pa
 	queue<Coord> q;
 	bool visited[LEN][LEN] = { { 0 } };
 	q.push(startCoord);
+	path[startCoord.x][startCoord.y].distance = 0;
+	visited[startCoord.x][startCoord.y] = true;
+
 	while (!q.empty())
 	{
 		Coord p = q.front();
@@ -37,6 +40,7 @@ void PathPlanner::searchAllPath(const int my_map[LEN][LEN], Coord startCoord, Pa
 				visited[neighbor.x][neighbor.y] = true;
 				path[neighbor.x][neighbor.y].lastCoord = p;
 				path[neighbor.x][neighbor.y].move = i;
+				path[neighbor.x][neighbor.y].distance = path[p.x][p.y].distance + 1;
 			}
 		}
 	}
@@ -48,38 +52,44 @@ void PathPlanner::initHarborPath(const int my_map[LEN][LEN],Coord coord[HARBOR_N
 {
 	for (int i = 0; i < HARBOR_NUM; i++)
 	{
-		haborCoord[i]= coord[i]; // 记录港口坐标
-		searchAllPath(my_map,coord[i],haborsPaths[i]);
+		harborCoord[i]= coord[i]; // 记录港口坐标
+		searchAllPath(my_map,coord[i],harborsPaths[i]);
 	}
 }
 
-vector<int> PathPlanner::getPathToHarbor(int haborId, Coord srcCoord)
+vector<int> PathPlanner::getPathToHarbor(int harborId, Coord srcCoord)
 {
-	auto curHaborPath = haborsPaths[haborId];
+	auto curHarborPath = harborsPaths[harborId];
 	vector<int> moves;
-	Coord p = srcCoord;
-	Coord destCoord = haborCoord[haborId];
+	Coord p = srcCoord; // 出发地为指定坐标
+	Coord destCoord = harborCoord[harborId]; // 目的地为港口
 	while (p.x != destCoord.x || p.y != destCoord.y)
 	{
-		int curMove = curHaborPath[p.x][p.y].move;
-		cerr << curMove;
-		p = curHaborPath[p.x][p.y].lastCoord;
+		int curMove = curHarborPath[p.x][p.y].move;
+		p = curHarborPath[p.x][p.y].lastCoord;
 		moves.push_back(reverseMove[curMove]);
 	}
 	return moves;
 }
 
-vector<int> PathPlanner::getPathFromHarbor(int haborId, Coord destCoord)
+vector<int> PathPlanner::getPathFromHarbor(int harborId, Coord destCoord)
 {
-	auto curHaborPath = haborsPaths[haborId];
+	auto curHarborPath = harborsPaths[harborId];
 	vector<int> moves;
-	Coord p = destCoord;
-	while (p.x != destCoord.x || p.y != destCoord.y)
+	Coord p = destCoord; // 目的地为指定坐标
+	Coord srcCoord = harborCoord[harborId]; // 出发地为港口
+	while (p.x != srcCoord.x || p.y != srcCoord.y)
 	{
-		p = curHaborPath[p.x][p.y].lastCoord;
-		moves.push_back(curHaborPath[p.x][p.y].move);
+		p = curHarborPath[p.x][p.y].lastCoord;
+		moves.push_back(curHarborPath[p.x][p.y].move);
 	}
 
 	reverse(moves.begin(),moves.end());
 	return moves;
+}
+
+int PathPlanner::getDistanceToHarbor(int harborId, Coord srcCoord)
+{
+	auto curHarborPath = harborsPaths[harborId];
+	return curHarborPath[srcCoord.x][srcCoord.y].distance;
 }
