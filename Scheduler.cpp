@@ -6,6 +6,7 @@ Scheduler::Scheduler() {
 	for (int i = 0; i < 200; i++) {
 		char line[201] = {0};
 		scanf("%s", line);
+		// TODO: 此处改为switch case可以加快速度
 		for (int j = 0; j < 200; j++) {
 			if (line[j] == '.') {
 				map.setPoint(i, j, EMPTY);
@@ -44,8 +45,7 @@ Scheduler::Scheduler() {
 	cerr << "init read over" << endl;
 	//初始化路径规划器
 	pathPlanner.initHarborPath(map.point,harborsCoord);
-	cerr << "init  over" << endl;
-
+	cerr << "init path planner over" << endl;
 
 	// 结尾
 	char end[100];
@@ -117,7 +117,7 @@ void Scheduler::findProductAndHarbor(int robotId)
 	double maxProfitRate = -1;
 	for (Product product : products)
 	{
-		//TODO 检查产品是否被锁定和是否会过期......
+		// TODO: 检查产品是否被锁定和是否会过期......
 
 		int nearestHarborId = product.getNearestHarborId();
 		int pathLen = product.distanceToHarbors[startHarbor] + product.distanceToHarbors[nearestHarborId];
@@ -136,7 +136,7 @@ void Scheduler::findProductAndHarbor(int robotId)
 
 void Scheduler::Update() {
 	// 此处做决策，并输出指令
-	cerr<<"Update frame:"<<frame<<endl;
+	cerr << "Update frame: "<< frame<<endl;
 	for (int i = 0; i < 10; i++) 
 	{
 		if (robot[i].target == -1) 
@@ -144,12 +144,12 @@ void Scheduler::Update() {
 			// 机器人没有目标，需要分配
 			if (robot[i].atHarbor == -1)
 			{
-				// TODO: 拿着货物去港口
-				cerr<<i<<"find harbor"<<endl;
+				cerr << i <<" finding harbor"<<endl;
 				findHarbor(i); // 第i个机器人去最近的港口 
 			}
 			else
 			{
+				cerr << i << " finding product" << endl;
 				findProductAndHarbor(i); //为第i个机器人分配任务
 			}
 		}

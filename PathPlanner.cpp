@@ -67,7 +67,7 @@ vector<int> PathPlanner::getPathToHarbor(int harborId, Coord srcCoord)
 	{
 		int curMove = curHarborPath[p.x][p.y].move;
 		p = curHarborPath[p.x][p.y].lastCoord;
-		moves.push_back(reverseMove[curMove]);
+		moves.push_back(reverseMove[curMove]); // 反转方向
 	}
 	return moves;
 }
@@ -84,7 +84,7 @@ vector<int> PathPlanner::getPathFromHarbor(int harborId, Coord destCoord)
 		moves.push_back(curHarborPath[p.x][p.y].move);
 	}
 
-	reverse(moves.begin(),moves.end());
+	reverse(moves.begin(),moves.end()); // 反转路径
 	return moves;
 }
 

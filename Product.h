@@ -2,13 +2,12 @@
 #include "defines.h"
 
 
-
 class Product
 {
 public:
 	int x;
 	int y;
-	int expireTime;
+	int expireTime; //到期时间（帧）
 	int price;
 
 	// 前往每个港口的距离
@@ -16,6 +15,8 @@ public:
 public:
 	Product(int x, int y, int price, int expireTime, int distanceToHarbors[HARBOR_NUM]);
 	Product() {};
+
+	// 获取最近的港口Id
 	int getNearestHarborId();
 
 };

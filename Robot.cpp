@@ -7,9 +7,6 @@ Robot::Robot(int id, int _x, int _y) {
 	hasGoods=NO_GOODS;
 	status=ON;
 }
-Robot::Robot() {
-
-}
 
 void Robot::update(int hasGoods, int x, int y, int status) {
 	if (this->hasGoods && !hasGoods) 
@@ -36,7 +33,7 @@ void Robot::moveOneStep()
 	}
 	else
 	{
-		cerr<<id<<"fails to move"<<endl;
+		cerr << id << " fails to move" <<endl;
 		// printf("move %d %d\n", id, 1);
 	}
 }

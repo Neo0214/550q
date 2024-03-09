@@ -5,9 +5,9 @@
 
 struct Path
 {
-	Coord lastCoord;
-	int move;
-	int distance;
+	Coord lastCoord; // 上一点的坐标
+	int move; // 从上一点到该点的移动方向
+	int distance; // 从港口到该点的距离
 	Path():move(-1),distance(-1) {};
 };
 
@@ -16,10 +16,10 @@ class PathPlanner
 {
 // 私有数据
 private:
-	Path*** harborsPaths;
-	Coord harborCoord[HARBOR_NUM];
+	Path*** harborsPaths; // 从所有港口到所有点的路径
+	Coord harborCoord[HARBOR_NUM]; // 记录港口坐标
 
-	int reverseMove[4] = { 1,0,3,2 };
+	int reverseMove[4] = { 1,0,3,2 }; // 移动方向反转数组
 
 // 私有函数
 private:
@@ -29,13 +29,17 @@ private:
 
 public:
 	PathPlanner();
+
 	// 以地图初始化路径规划器获取路径
 	void initHarborPath(const int my_map[LEN][LEN],Coord coord[HARBOR_NUM]);
 
+	// 获取从srcCoord到harborId的路径
 	vector<int> getPathToHarbor(int harborId, Coord srcCoord);
 
+	// 获取从harborId到destCoord的路径
 	vector<int> getPathFromHarbor(int harborId, Coord destCoord);
 
+	// 获取从srcCoord到harborId的路径长度
 	int getDistanceToHarbor(int harborId, Coord srcCoord);
 
 };

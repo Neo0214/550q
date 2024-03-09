@@ -1,7 +1,6 @@
 #include "Map.h"
 
 
-
 Map::Map()
 {
 	memset(point, 0, sizeof(point));

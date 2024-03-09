@@ -22,13 +22,13 @@ private:
     int frame; // 当前帧号
 
     // 私有函数
-    void findHarbor(int robotId);
-    void findProductAndHarbor(int robotId);
+    void findHarbor(int robotId); //找最近的港口
+    void findProductAndHarbor(int robotId); //找收益率最高的物品和对应港口
 
 
 public:
     Scheduler();
-    // 公共函数
+
     bool NextFrame();
     void Update();
 };

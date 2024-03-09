@@ -11,7 +11,6 @@ Product::Product(int x, int y, int price, int expireTime, int distanceToHarbors[
 
 int Product::getNearestHarborId()
 {
-	// find the nearest harbor
 	int minDistance = 1000000;
 	int minDistanceId;
 	for (int i = 0; i < HARBOR_NUM; i++)

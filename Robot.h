@@ -23,7 +23,7 @@ public:
 	// 私有函数
 public:
 	Robot(int id, int _x, int _y);
-	Robot();
+	Robot() {};
 	// 公共函数
 	void update(int hasGoods, int x, int y, int status);
 	void assignTask(const vector<int>& moves, int target);
