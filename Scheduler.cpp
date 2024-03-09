@@ -117,10 +117,16 @@ void Scheduler::findProductAndHarbor(int robotId)
 	double maxProfitRate = -1;
 	for (Product product : products)
 	{
-		// TODO: 检查产品是否被锁定和是否会过期......
-
+		if(product.locked) // 产品被锁定
+			continue;
 		int nearestHarborId = product.getNearestHarborId();
-		int pathLen = product.distanceToHarbors[startHarbor] + product.distanceToHarbors[nearestHarborId];
+		if (nearestHarborId == -1) // 产品没有可达港口
+			continue;
+		int pathLen1 = product.distanceToHarbors[startHarbor];
+		if(frame+pathLen1>=product.expireTime) // 机器人到达产品的时间超过了过期时间
+			continue;
+
+		int pathLen = pathLen1 + product.distanceToHarbors[nearestHarborId];
 		double profitRate = (double)product.price / pathLen;
 		if(profitRate > maxProfitRate)
 		{
@@ -128,8 +134,15 @@ void Scheduler::findProductAndHarbor(int robotId)
 			bestProduct=product;
 			bestHarborId=nearestHarborId;
 		}
-		robot[robotId].assignTask(pathPlanner.getPathFromHarbor(startHarbor,Coord(bestProduct.x,bestProduct.y)), bestHarborId);
+		
 	}
+	if (bestHarborId != -1)
+	{
+		robot[robotId].assignTask(pathPlanner.getPathFromHarbor(startHarbor, Coord(bestProduct.x, bestProduct.y)), bestHarborId);
+		// TODO: 这里锁定产品
+	}
+	else
+		cerr<< robotId <<" has no product and harbor"<<endl;
 	
 
 }

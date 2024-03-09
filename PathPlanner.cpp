@@ -90,6 +90,5 @@ vector<int> PathPlanner::getPathFromHarbor(int harborId, Coord destCoord)
 
 int PathPlanner::getDistanceToHarbor(int harborId, Coord srcCoord)
 {
-	auto curHarborPath = harborsPaths[harborId];
-	return curHarborPath[srcCoord.x][srcCoord.y].distance;
+	return  harborsPaths[harborId][srcCoord.x][srcCoord.y].distance;
 }

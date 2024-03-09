@@ -8,7 +8,7 @@ struct Path
 	Coord lastCoord; // 上一点的坐标
 	int move; // 从上一点到该点的移动方向
 	int distance; // 从港口到该点的距离
-	Path():move(-1),distance(-1) {};
+	Path():move(-1),distance(-1) {}; // 距离初始化为-1
 };
 
 
