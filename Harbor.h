@@ -9,8 +9,9 @@ private:
     int x, y;
     int time;
     int velocity;
+public:
     // 动态数据
-
+    vector<int> productPrices;
     // 私有函数
 
 public:

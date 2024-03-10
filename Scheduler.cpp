@@ -103,43 +103,47 @@ void Scheduler::findHarbor(int robotId)
 		}
 
 	}
-	if(bestHarborId!=-1)
-		robot[robotId].assignTask(pathPlanner.getPathToHarbor(bestHarborId, Coord(robot[robotId].x, robot[robotId].y)), bestHarborId);
+	if (bestHarborId != -1)
+	{
+		robot[robotId].assignTask(pathPlanner.getPathToHarbor(bestHarborId, Coord(robot[robotId].x, robot[robotId].y)), 2);
+		robot[robotId].atHarbor = bestHarborId; // 设置目标港口
+	}
 	else
 		cerr<< robotId <<" has no harbor"<<endl;
 }
 
 void Scheduler::findProductAndHarbor(int robotId)
 {
-	int startHarbor = robot[robotId].atHarbor;
-	Product bestProduct;
+	int startHarbor = robot[robotId].atHarbor; // 将此前设置的目标港口作为出发港口（实际上可能需要再次检测）
+	int bestProductId;
 	int bestHarborId = -1;
 	double maxProfitRate = -1;
-	for (Product product : products)
+	for (int i=0;i<products.size();i++)
 	{
-		if(product.locked) // 产品被锁定
+		if(products[i].locked) // 产品被锁定
 			continue;
-		int nearestHarborId = product.getNearestHarborId();
+		int nearestHarborId = products[i].getNearestHarborId();
 		if (nearestHarborId == -1) // 产品没有可达港口
 			continue;
-		int pathLen1 = product.distanceToHarbors[startHarbor];
-		if(frame+pathLen1>=product.expireTime) // 机器人到达产品的时间超过了过期时间
+		int pathLen1 = products[i].distanceToHarbors[startHarbor];
+		if(frame+pathLen1>=products[i].expireTime) // 机器人到达产品的时间超过了过期时间
 			continue;
 
-		int pathLen = pathLen1 + product.distanceToHarbors[nearestHarborId];
-		double profitRate = (double)product.price / pathLen;
+		int pathLen = pathLen1 + products[i].distanceToHarbors[nearestHarborId];
+		double profitRate = (double)products[i].price / pathLen;
 		if(profitRate > maxProfitRate)
 		{
 			maxProfitRate=profitRate;
-			bestProduct=product;
+			bestProductId=i;
 			bestHarborId=nearestHarborId;
 		}
 		
 	}
 	if (bestHarborId != -1)
 	{
-		robot[robotId].assignTask(pathPlanner.getPathFromHarbor(startHarbor, Coord(bestProduct.x, bestProduct.y)), bestHarborId);
-		// TODO: 这里锁定产品
+		robot[robotId].assignTask(pathPlanner.getPathFromHarbor(startHarbor, Coord(products[bestProductId].x, products[bestProductId].y)), 0);
+		products[bestProductId].locked = true;
+		robot[robotId].carryProduct = bestProductId;
 	}
 	else
 		cerr<< robotId <<" has no product and harbor"<<endl;
@@ -150,27 +154,27 @@ void Scheduler::findProductAndHarbor(int robotId)
 void Scheduler::Update() {
 	// 此处做决策，并输出指令
 	cerr << "Update frame: "<< frame<<endl;
-	for (int i = 0; i < 10; i++) 
+	for (int i = 0; i <ROBOT_NUM; i++) 
 	{
 		if (robot[i].target == -1) 
 		{
-			// 机器人没有目标，需要分配
-			if (robot[i].atHarbor == -1)
-			{
-				cerr << i <<" finding harbor"<<endl;
-				findHarbor(i); // 第i个机器人去最近的港口 
-			}
-			else
-			{
-				cerr << i << " finding product" << endl;
-				findProductAndHarbor(i); //为第i个机器人分配任务
-			}
+			cerr << i << " finding product" << endl;
+			findProductAndHarbor(i); //为第i个机器人分配任务
+		}
+		else if (robot[i].target == 1)
+		{
+			cerr << i << " finding harbor" << endl;
+			findHarbor(i); // 第i个机器人去最近的港口 
+
 		}
 	}
 	//发出指令控制机器人移动
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < ROBOT_NUM; i++)
 	{
-		robot[i].moveOneStep();
+		int action = robot[i].moveOneStep();
+		if (action == 1) //放下物品
+			harbor[robot[i].atHarbor].productPrices.push_back(products[robot[i].carryProduct].price);
+
 	}
 
 	// 结尾

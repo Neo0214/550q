@@ -80,8 +80,8 @@ vector<int> PathPlanner::getPathFromHarbor(int harborId, Coord destCoord)
 	Coord srcCoord = harborCoord[harborId]; // 出发地为港口
 	while (p.x != srcCoord.x || p.y != srcCoord.y)
 	{
-		p = curHarborPath[p.x][p.y].lastCoord;
 		moves.push_back(curHarborPath[p.x][p.y].move);
+		p = curHarborPath[p.x][p.y].lastCoord;
 	}
 
 	reverse(moves.begin(),moves.end()); // 反转路径

@@ -1,5 +1,6 @@
 #pragma once
 #include "defines.h"
+#include "Product.h"
 
 #define ON 1
 #define OFF 0
@@ -17,8 +18,9 @@ public:
 	// 动态数据
 	vector<int> moves; // 未来的移动
 	int curMoveCount=0; // 当前移动的步数
-	int target=-1; // -1: 无目标，其他：前往港口的编号
-	int atHarbor=-1; // -1: 不在港口，其他：在港口的编号
+	int target=1; 
+	int atHarbor=-1; // 目标港口
+	int carryProduct = -1;
 
 	// 私有函数
 public:
@@ -27,6 +29,6 @@ public:
 	// 公共函数
 	void update(int hasGoods, int x, int y, int status);
 	void assignTask(const vector<int>& moves, int target);
-	void moveOneStep();
+	int moveOneStep();
 };
 
