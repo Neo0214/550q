@@ -27,7 +27,9 @@ private:
     void findHarbor(int robotId); //找最近的港口
     void findProductAndHarbor(int robotId); //找收益率最高的物品和对应港口
     void initHarbor(); // 对港口速度做初始化处理
-
+    vector<int> getFreeBoat(); // 获取空闲船只
+    int selectFastestHarbor(int* blockVel);
+    void loadGoods(Boat* _boat,Harbor* _harbor);
 public:
     Scheduler();
 

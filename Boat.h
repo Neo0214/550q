@@ -13,6 +13,7 @@ private:
     // 动态数据
     int status;
     int pos;
+    int curCapacity;
     // 私有函数
 
 public:
@@ -24,4 +25,6 @@ public:
     void comeBack();
     int getStatus();
     int getPos();
+    int getCurCapacity();
+    void addGoods(int num);
 };
