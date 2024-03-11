@@ -15,3 +15,20 @@ void Boat::update(int status, int pos) {
 	this->status = status;
 	this->pos = pos;
 }
+
+void Boat::gotoHarbor(int harborId) {
+	printf("ship %d %d\n", id, harborId);
+	this->status= MOVING;
+}
+
+void Boat::comeBack() {
+	printf("go %d\n", id);
+}
+
+int Boat::getStatus() {
+	return status;
+}
+
+int Boat::getPos() {
+	return pos;
+}

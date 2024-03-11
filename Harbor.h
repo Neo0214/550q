@@ -3,6 +3,7 @@
 
 class Harbor {
     friend class Map;
+    friend class Scheduler;
 private:
     // 固定数据
     int Id;
@@ -12,6 +13,7 @@ private:
 public:
     // 动态数据
     vector<int> productPrices;
+    bool isLocked;
     // 私有函数
 
 public:
