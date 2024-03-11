@@ -28,16 +28,22 @@ void Robot::assignTask(const vector<int>& moves, int target)
 
 int Robot::moveOneStep()
 {
-	int returnNum = -1; // 0代表发出了get指令，1代表发出了pull指令
+
 	if (curMoveCount < moves.size())
 	{
 		printf("move %d %d\n", id, moves[curMoveCount]);
 		curMoveCount++;
 		if (curMoveCount == moves.size()) // 到达目标位置
 			if (!hasGoods)
+			{
 				printf("get %d\n", id);
+				return 0;
+			}
 			else
+			{
 				printf("pull %d\n", id);
+				return 1;
+			}
 	}
 	else
 	{
@@ -45,4 +51,5 @@ int Robot::moveOneStep()
 		cerr << id << " fails to move" <<endl;
 		// printf("move %d %d\n", id, 1);
 	}
+	return -1;
 }
