@@ -28,28 +28,28 @@ void Robot::assignTask(const vector<int>& moves, int target)
 
 int Robot::moveOneStep()
 {
-
 	if (curMoveCount < moves.size())
 	{
 		printf("move %d %d\n", id, moves[curMoveCount]);
 		curMoveCount++;
 		if (curMoveCount == moves.size()) // 到达目标位置
-			if (!hasGoods)
-			{
+		{
+			if (!hasGoods) {
 				printf("get %d\n", id);
 				return 0;
 			}
-			else
-			{
+			else {
 				printf("pull %d\n", id);
 				return 1;
 			}
+		}
 	}
 	else
 	{
 		target = -1;
-		cerr << id << " fails to move" <<endl;
-		// printf("move %d %d\n", id, 1);
+#ifdef DEBUG
+		cerr << id << " fails to move" << endl;
+#endif
 	}
 	return -1;
 }

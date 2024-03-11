@@ -29,9 +29,19 @@ void PathPlanner::searchAllPath(const int my_map[LEN][LEN], Coord startCoord, Pa
 		q.pop();
 		//右左上下
 		Coord neighbors[4] = { Coord(p.x,p.y + 1),Coord(p.x,p.y - 1),Coord(p.x - 1,p.y),Coord(p.x + 1,p.y) };
-
-		for (int i = 0; i < 4; i++) //TODO：随机打乱
+		
+		// 随机构建一个0到3的数组
+		int a[4] = { 0,1,2,3 };	
+		// 随机打乱数组
+		for (int i = 0; i < 4; i++)
 		{
+			int j = rand() % 4;
+			swap(a[i], a[j]);
+		}
+
+		for (int idx = 0; idx < 4; idx++) //TODO：随机打乱
+		{
+			int i = a[idx];
 			Coord neighbor = neighbors[i];
 			if (neighbor.x >= 0 && neighbor.x < LEN && neighbor.y >= 0 && neighbor.y < LEN
 				&& my_map[neighbor.x][neighbor.y] >= -1 && !visited[neighbor.x][neighbor.y])

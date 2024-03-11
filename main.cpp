@@ -4,11 +4,11 @@ using namespace std;
 
 int main()
 {
-    cerr<<"Hello, World!"<<endl;
+    srand(0);
     Scheduler scheduler;
     while (scheduler.NextFrame())
     {
-		scheduler.Update();
+		 scheduler.Update();
 	}
 
     return 0;

@@ -7,6 +7,7 @@ Harbor::Harbor(int _Id,int _x, int _y, int _time, int _velocity)
 	y = _y;
 	time = _time;
 	velocity = _velocity;
+	isLocked = false;
 }
 Harbor::Harbor() {
 
