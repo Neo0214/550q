@@ -4,7 +4,6 @@ using namespace std;
 
 int main()
 {
-    cerr<<"Hello, World!"<<endl;
     Scheduler scheduler;
     while (scheduler.NextFrame())
     {

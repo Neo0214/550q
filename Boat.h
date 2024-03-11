@@ -20,4 +20,8 @@ public:
     Boat();
     // ¹«¹²º¯Êý
     void update(int status, int pos);
+    void gotoHarbor(int harborId);
+    void comeBack();
+    int getStatus();
+    int getPos();
 };
