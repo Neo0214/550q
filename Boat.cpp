@@ -7,6 +7,7 @@ Boat::Boat(int _id, int _capacity)
 	status = NORMAL;
 	pos = -1;
 	curCapacity = 0;
+	preLoadNum = 0;
 }
 Boat::Boat() {
 
@@ -19,7 +20,6 @@ void Boat::update(int status, int pos) {
 
 void Boat::gotoHarbor(int harborId) {
 	printf("ship %d %d\n", id, harborId);
-	cerr<<"ship "<<id<<" goto "<<harborId<<endl;
 	this->status= MOVING;
 }
 
@@ -42,4 +42,9 @@ int Boat::getCurCapacity() {
 
 void Boat::addGoods(int num) {
 	curCapacity += num;
+	preLoadNum = num;
+}
+
+int Boat::getPre() {
+	return preLoadNum;
 }

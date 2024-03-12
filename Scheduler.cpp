@@ -55,6 +55,9 @@ Scheduler::Scheduler() {
 }
 
 bool Scheduler::NextFrame() {
+	//if (frame == 14999) {
+	//	printValue();
+	//}
 	int money;
 	if (!scanf("%d %d", &this->frame, &money)) // 读掉第一行frame和money
 		return false;
@@ -107,10 +110,7 @@ void Scheduler::findHarbor(int robotId)
 		robot[robotId].assignTask(pathPlanner.getPathToHarbor(bestHarborId, Coord(robot[robotId].x, robot[robotId].y)), 2);
 		robot[robotId].atHarbor = bestHarborId; // 设置目标港口
 	}
-#ifdef DEBUG
-	else
-		cerr << robotId << " no harbor" << endl;
-#endif
+
 }
 
 void Scheduler::findProductAndHarbor(int robotId)
@@ -118,11 +118,10 @@ void Scheduler::findProductAndHarbor(int robotId)
 	int startHarbor = robot[robotId].atHarbor; // 将此前设置的目标港口作为出发港口（实际上可能需要再次检测）
 	if (startHarbor == -1)
 	{
-#ifdef DEBUG
-		cerr << robotId << " is not at harbor" << endl;
-#endif
 		return;
 	}
+
+
 	int bestProductId;
 	int bestHarborId = -1;
 	double maxProfitRate = -1;
@@ -133,30 +132,30 @@ void Scheduler::findProductAndHarbor(int robotId)
 		int nearestHarborId = products[i].getNearestHarborId();
 		if (nearestHarborId == -1) // 产品没有可达港口
 			continue;
-		int pathLen1 = products[i].distanceToHarbors[startHarbor];
+		int pathLen1 = products[i].distanceToHarbors[startHarbor]; 
+		if (pathLen1 == -1) // 产品不可到达机器人出发港口
+			continue;
 		if(frame+pathLen1>=products[i].expireTime) // 机器人到达产品的时间超过了过期时间
 			continue;
 
 		int pathLen = pathLen1 + products[i].distanceToHarbors[nearestHarborId];
-		double profitRate = (double)products[i].price / pathLen;
+		double profitRate = (double)products[i].price * 2 / pathLen;
 		if(profitRate > maxProfitRate)
 		{
 			maxProfitRate=profitRate;
 			bestProductId=i;
 			bestHarborId=nearestHarborId;
 		}
-		
 	}
+
 	if (bestHarborId != -1)
 	{
 		robot[robotId].assignTask(pathPlanner.getPathFromHarbor(startHarbor, Coord(products[bestProductId].x, products[bestProductId].y)), 0);
 		products[bestProductId].locked = true;
 		robot[robotId].carryProduct = bestProductId;
+		robot[robotId].atHarbor = -1;
 	}
-#ifdef DEBUG
-	else
-		cerr << robotId << " no product" << endl;
-#endif
+
 
 
 }
@@ -184,64 +183,85 @@ void Scheduler::initHarbor() {
 }
 
 void Scheduler::Update() {
+
 	// 此处做决策，并输出指令
 	for (int i = 0; i <ROBOT_NUM; i++) 
 	{
 		if (robot[i].target == -1) 
 		{
-#ifdef DEBUG
-			cerr << i << " findProduct" << endl;
-#endif
+
 			findProductAndHarbor(i); //为第i个机器人分配任务
 		}
 		else if (robot[i].target == 1)
 		{
-#ifdef DEBUG
-			cerr << i << " findHarbor" << endl;
-#endif
+
 			findHarbor(i); // 第i个机器人去最近的港口 
 
 		}
 	}
 	//发出指令控制机器人移动
+	int collisionMap[LEN][LEN] = { 0 };
+	memcpy(collisionMap, map.point, sizeof(map.point));
 	for (int i = 0; i < ROBOT_NUM; i++)
 	{
-		int action = robot[i].moveOneStep();
+		collisionMap[robot[i].x][robot[i].y] = 1;
+	}
+
+	//发出指令控制机器人移动
+	for (int i = 0; i < ROBOT_NUM; i++)
+	{
+		int action = robot[i].moveOneStep(collisionMap);
 		if (action == 1) //放下物品
 			harbor[robot[i].atHarbor].productPrices.push_back(products[robot[i].carryProduct].price);
-		// 放下物品以后，才能装上船
+		
+	}
+	// 放下物品以后，才能装上船
 		// 单独处理货物搬上船的问题
 		// 如果在港口，将货物搬上船
-		for (int i = 0; i < 1; i++)
-		{
-			if (boat[i].getPos() != -1 && boat[i].getStatus()==NORMAL && i==0) {
-				//cerr<<"boat 0 has "<<boat[0].getCurCapacity() << endl;
-				//cerr <<"harbor 1 has"<< harbor[boat[0].getPos()].productPrices.size() << endl;
-				//cerr << "boat 0:" << &boat[i] << endl;
-				//cerr << "harbor 1:" << &harbor[boat[i].getPos()] << endl;
-				loadGoods(&boat[i], &harbor[boat[i].getPos()]);
-			}
+	for (int i = 0; i < 5; i++)
+	{
+		if (boat[i].getPos() != -1 && boat[i].getStatus() == NORMAL) {
+
+
+			loadGoods(&boat[i], &harbor[boat[i].getPos()]);
 		}
 	}
+
+
 	// 以上是机器人的移动，以下是船的移动
-	if (frame > 500) {
-		for (int i = 0; i < 5; i++) {
-			if (boat[i].getCurCapacity() == boatCapacity || (boat[i].getPos()!=-1 && boat[i].getStatus()==NORMAL && 14999-frame<harbor[boat[i].getPos()].time)) {
+	// 首先看船是否需要回去交货
+	for (int i = 0; i < 5; i++) {
+		if (boat[i].getCurCapacity() == boatCapacity
+			|| (boat[i].getPos() != -1 && boat[i].getStatus() == NORMAL && 14999 - frame < harbor[boat[i].getPos()].time)) {
+			boat[i].comeBack();
+			harbor[boat[i].getPos()].isLocked = false;
+		}
+	}
+	// 然后看船是否需要换一个港口
+	for (int i = 0; i < 5; i++) {
+
+		if (boat[i].getPos() != -1 && boat[i].getStatus() == NORMAL && boat[i].getPre() == 0 && harbor[boat[i].getPos()].productPrices.size()==0) {
+			// 此时船在港口，但是没有货物上船，考虑更换港口
+			int harborId = selectFastestHarbor(boatCapacity-boat[i].getCurCapacity());
+			if (harborId != -1) {
+				harbor[boat[i].getPos()].isLocked = false;
+
+				harbor[harborId].isLocked = true;
+				boat[i].gotoHarbor(harborId);
+			}
+			// 如果是-1，说明没有合适的港口，立刻回去交货
+			else {
 				boat[i].comeBack();
 				harbor[boat[i].getPos()].isLocked = false;
 			}
 		}
-		// 过一会再开始猜测
-		int blockVel[10] = { 0 };
-		for (int i = 0; i < HARBOR_NUM; i++) {
-			int blockNum = int(harbor[i].productPrices.size()); // 已堆积的数量
-			blockVel[i] = float(blockNum) / frame; // 堆积速度
-		}
-		vector<int> freeBoat = getFreeBoat();
-		// 根据空闲数量挑选速率最快的港口
-		for (int i = 0; i < freeBoat.size(); i++) {
-			int harborId = selectFastestHarbor(blockVel); 
-			// 一定能挑选出一个
+	}
+	vector<int> freeBoat = getFreeBoat();
+	// 根据空闲数量挑选货最多的港口
+	for (int i = 0; i < freeBoat.size(); i++) {
+		int harborId = selectAvailableFastestHarborWithGoingFromOriginPoint();
+		// 要注意此处boat从交货地点出发，要考虑是否还有时间回来交货
+		if (harborId != -1) {
 			harbor[harborId].isLocked = true;
 			boat[freeBoat[i]].gotoHarbor(harborId);
 		}
@@ -253,25 +273,64 @@ void Scheduler::Update() {
 	fflush(stdout);
 }
 
-int Scheduler::selectFastestHarbor(int* blockVel) {
-	int maxID = -1;
-	int maxLoadVel = -1;
-	float maxVel = -1;
+int Scheduler::selectAvailableFastestHarborWithGoingFromOriginPoint() {
+	int bestID = -1;
+	int value = -1;
+	for (int i = 0; i < 10; i++) {
+		if (harbor[i].isLocked || harbor[i].time+harbor[i].time+frame>=15000) {
+			continue;
+		}
+		else {
+			int tmpValue=getFutureValue(i,boatCapacity);
+			if (tmpValue > value) {
+				value = tmpValue;
+				bestID = i;
+			}
+		}
+	}
+	return bestID;
+}
+
+int Scheduler::selectFastestHarbor(int countNeeded) {
+	int bestID = -1;
+	int value = -1;
 	for (int i = 0; i < 10; i++) {
 		if (harbor[i].isLocked) {
 			continue;
 		}
 		else {
-			if (harbor[i].velocity > maxLoadVel) {
-				if (harbor[i].productPrices.size() / float(frame) > maxVel) {
-					maxID = i;
-					maxLoadVel=harbor[i].velocity;
-					maxVel = harbor[i].productPrices.size() / frame;
-				}
+			int tmpValue = getFutureValue(i,countNeeded);
+			if (tmpValue > value) {
+				value = tmpValue;
+				bestID = i;
 			}
+			
 		}
 	}
-	return maxID;
+	return bestID;
+}
+
+int Scheduler::getFutureValue(int harborId, int total) {
+	int count = 0;
+	int i = 0;
+	for (; i < harbor[harborId].productPrices.size() && i<total; i++) {
+		count += harbor[harborId].productPrices[i];
+	}
+	// 在此处判断时间是否还够换港口
+	// i+1 才是真正的货物数量
+	int loadcost = (i + 1) / harbor[harborId].velocity;
+	if (loadcost + harbor[harborId].time + 500 + frame >= 15000) {
+		return -1;
+	}
+	return count;
+}
+
+int Scheduler::getValue(int harborId) {
+	int count = 0;
+	for (int i = 0; i < harbor[harborId].productPrices.size(); i++) {
+		count += harbor[harborId].productPrices[i];
+	}
+	return count;
 }
 
 vector<int> Scheduler::getFreeBoat() {
@@ -287,7 +346,16 @@ void Scheduler::loadGoods(Boat* _boat, Harbor* _harbor)
 {
 	int num = min(_harbor->velocity, int(_harbor->productPrices.size()));
 	_boat->addGoods(num);
-	//cerr<<_harbor->productPrices.size()<<endl;
+
 	_harbor->productPrices.erase(_harbor->productPrices.begin(), _harbor->productPrices.begin() + num);
-	//cerr<<harbor->productPrices.size()<<endl;
+
+}
+
+void Scheduler::printValue() {
+	for (int i = 0; i < HARBOR_NUM; i++) {
+		int count = 0;
+		for (int j = 0; j < harbor[i].productPrices.size(); j++) {
+			count+=harbor[i].productPrices[j];
+		}
+	}
 }

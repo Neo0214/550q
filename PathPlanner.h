@@ -17,9 +17,9 @@ class PathPlanner
 // 私有数据
 private:
 	Path*** harborsPaths; // 从所有港口到所有点的路径
-	Coord harborCoord[HARBOR_NUM]; // 记录港口坐标
+	//Coord harborCoord[HARBOR_NUM]; // 记录港口坐标
 
-	int reverseMove[4] = { 1,0,3,2 }; // 移动方向反转数组
+	
 
 // 私有函数
 private:

@@ -29,6 +29,7 @@ public:
 	// ¹«¹²º¯Êý
 	void update(int hasGoods, int x, int y, int status);
 	void assignTask(const vector<int>& moves, int target);
-	int moveOneStep();
+	int moveOneStep(int collisionMap[LEN][LEN]);
+	Coord getNextPos();
 };
 

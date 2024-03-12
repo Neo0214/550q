@@ -23,6 +23,18 @@ void PathPlanner::searchAllPath(const int my_map[LEN][LEN], Coord startCoord, Pa
 	path[startCoord.x][startCoord.y].distance = 0;
 	visited[startCoord.x][startCoord.y] = true;
 
+	// 从整个港口开始搜
+	//queue<Coord> q;
+	//bool visited[LEN][LEN] = { {0} };
+	//for (int i = 0; i < 4; i++) {
+	//	for (int j = 0; j < 4; j++) {
+	//		q.push(Coord(startCoord.x + i, startCoord.y + j));
+	//		path[startCoord.x + i][startCoord.y + j].distance = 0;
+	//		visited[startCoord.x + i][startCoord.y + j] = true;
+	//	}
+	//}
+
+
 	while (!q.empty())
 	{
 		Coord p = q.front();
@@ -39,7 +51,7 @@ void PathPlanner::searchAllPath(const int my_map[LEN][LEN], Coord startCoord, Pa
 			swap(a[i], a[j]);
 		}
 
-		for (int idx = 0; idx < 4; idx++) //TODO：随机打乱
+		for (int idx = 0; idx < 4; idx++) 
 		{
 			int i = a[idx];
 			Coord neighbor = neighbors[i];
@@ -62,7 +74,7 @@ void PathPlanner::initHarborPath(const int my_map[LEN][LEN],Coord coord[HARBOR_N
 {
 	for (int i = 0; i < HARBOR_NUM; i++)
 	{
-		harborCoord[i]= coord[i]; // 记录港口坐标
+		//harborCoord[i]= coord[i]; // 记录港口坐标
 		searchAllPath(my_map,coord[i],harborsPaths[i]);
 	}
 }
@@ -72,8 +84,8 @@ vector<int> PathPlanner::getPathToHarbor(int harborId, Coord srcCoord)
 	auto curHarborPath = harborsPaths[harborId];
 	vector<int> moves;
 	Coord p = srcCoord; // 出发地为指定坐标
-	Coord destCoord = harborCoord[harborId]; // 目的地为港口
-	while (p.x != destCoord.x || p.y != destCoord.y)
+	//Coord destCoord = harborCoord[harborId]; // 目的地为港口
+	while (curHarborPath[p.x][p.y].distance!=0)
 	{
 		int curMove = curHarborPath[p.x][p.y].move;
 		p = curHarborPath[p.x][p.y].lastCoord;
@@ -87,8 +99,8 @@ vector<int> PathPlanner::getPathFromHarbor(int harborId, Coord destCoord)
 	auto curHarborPath = harborsPaths[harborId];
 	vector<int> moves;
 	Coord p = destCoord; // 目的地为指定坐标
-	Coord srcCoord = harborCoord[harborId]; // 出发地为港口
-	while (p.x != srcCoord.x || p.y != srcCoord.y)
+	//Coord srcCoord = harborCoord[harborId]; // 出发地为港口
+	while (curHarborPath[p.x][p.y].distance != 0)
 	{
 		moves.push_back(curHarborPath[p.x][p.y].move);
 		p = curHarborPath[p.x][p.y].lastCoord;
