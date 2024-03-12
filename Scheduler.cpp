@@ -55,9 +55,9 @@ Scheduler::Scheduler() {
 }
 
 bool Scheduler::NextFrame() {
-	//if (frame == 14999) {
-	//	printValue();
-	//}
+	if (frame == 14999) {
+		printValue();
+	}
 	int money;
 	if (!scanf("%d %d", &this->frame, &money)) // 读掉第一行frame和money
 		return false;
@@ -139,7 +139,7 @@ void Scheduler::findProductAndHarbor(int robotId)
 			continue;
 
 		int pathLen = pathLen1 + products[i].distanceToHarbors[nearestHarborId];
-		double profitRate = (double)products[i].price * 2 / pathLen;
+		double profitRate = (double)products[i].price * 20 / pathLen;
 		if(profitRate > maxProfitRate)
 		{
 			maxProfitRate=profitRate;
@@ -357,5 +357,6 @@ void Scheduler::printValue() {
 		for (int j = 0; j < harbor[i].productPrices.size(); j++) {
 			count+=harbor[i].productPrices[j];
 		}
+		cerr<<"harbor "<<i<<" "<<count<<endl;
 	}
 }
