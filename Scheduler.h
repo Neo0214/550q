@@ -22,6 +22,7 @@ private:
     int boatCapacity; // 船的容量
     // 动态数据
     int frame; // 当前帧号
+    int score = 0;
 
     // 私有函数
     void findHarbor(int robotId); //找最近的港口

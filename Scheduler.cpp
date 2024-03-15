@@ -77,6 +77,10 @@ bool Scheduler::NextFrame() {
 	for (int i = 0; i < 10; i++) {
 		int hasGoods, x, y, status;
 		scanf("%d %d %d %d", &hasGoods, &x, &y, &status);
+		if (status == OFF)
+		{
+			cerr << "collide!" << endl;
+		}
 		robot[i].update(hasGoods, x, y, status);
 	}
 	for (int i = 0; i < 5; i++) {
@@ -139,7 +143,7 @@ void Scheduler::findProductAndHarbor(int robotId)
 			continue;
 
 		int pathLen = pathLen1 + products[i].distanceToHarbors[nearestHarborId];
-		double profitRate = (double)products[i].price * 20 / pathLen;
+		double profitRate = (double)products[i].price / pathLen;
 		if(profitRate > maxProfitRate)
 		{
 			maxProfitRate=profitRate;
@@ -201,20 +205,55 @@ void Scheduler::Update() {
 	}
 	//发出指令控制机器人移动
 	int collisionMap[LEN][LEN] = { 0 };
-	memcpy(collisionMap, map.point, sizeof(map.point));
+	for (int i = 0; i < LEN; i++)
+	{
+		for (int j = 0; j < LEN; j++)
+		{
+			switch (map.point[i][j])
+			{
+				case EMPTY:
+				case HARBOR:
+					collisionMap[i][j] = 0;
+					break;
+				default:
+					collisionMap[i][j] = -1;
+					break;
+			}
+		}
+	}
 	for (int i = 0; i < ROBOT_NUM; i++)
 	{
-		collisionMap[robot[i].x][robot[i].y] = 1;
+		collisionMap[robot[i].x][robot[i].y] = i + 1;
+	}
+
+	int moveOfRobots[10];
+	for (int i = 0; i < ROBOT_NUM; i++)
+	{
+		pair<int, int> moveAndCollision;
+		//cerr << '(' << robot[i].x << ',' << robot[i].y << ')';
+		moveAndCollision = robot[i].moveOneStep(collisionMap);
+		moveOfRobots[i] = moveAndCollision.first;
+		Coord newCoord = Coord(robot[i].x, robot[i].y) + moveOfRobots[i];
+		//cerr << '(' << newCoord.x << ',' << newCoord.y << ')';
+		//cerr << endl;
+		if (moveAndCollision.second != -1)
+			cerr << "Not implement error" << endl;
 	}
 
 	//发出指令控制机器人移动
 	for (int i = 0; i < ROBOT_NUM; i++)
 	{
-		int action = robot[i].moveOneStep(collisionMap);
+		int action = robot[i].command(moveOfRobots[i]);
 		if (action == 1) //放下物品
+		{
 			harbor[robot[i].atHarbor].productPrices.push_back(products[robot[i].carryProduct].price);
+			score += products[robot[i].carryProduct].price;
+		}
 		
 	}
+
+
+
 	// 放下物品以后，才能装上船
 		// 单独处理货物搬上船的问题
 		// 如果在港口，将货物搬上船
@@ -359,4 +398,5 @@ void Scheduler::printValue() {
 		}
 		cerr<<"harbor "<<i<<" "<<count<<endl;
 	}
+	cerr <<"final " << score << endl;
 }
