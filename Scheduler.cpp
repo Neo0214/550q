@@ -141,9 +141,9 @@ void Scheduler::findProductAndHarbor(int robotId)
 			continue;
 		if(frame+pathLen1>=products[i].expireTime) // 机器人到达产品的时间超过了过期时间
 			continue;
-
-		int pathLen = pathLen1 + products[i].distanceToHarbors[nearestHarborId];
-		double profitRate = (double)products[i].price / pathLen;
+		int pathLen2 = products[i].distanceToHarbors[nearestHarborId];
+		int pathLen = pathLen1 + pathLen2;
+		double profitRate = pow(products[i].price,1 + 0.1 * robotId) / pathLen * exp(-0.00001*(products[i].expireTime-frame)) + 1.0 / ((pathLen1 - pathLen2)*(pathLen1 - pathLen2) + 0.5);
 		if(profitRate > maxProfitRate)
 		{
 			maxProfitRate=profitRate;
