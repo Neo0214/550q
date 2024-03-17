@@ -28,8 +28,9 @@ public:
 	Robot() {};
 	// ¹«¹²º¯Êý
 	void update(int hasGoods, int x, int y, int status);
-	void assignTask(const vector<int>& moves, int target);
-	pair<int, int> moveOneStep(int collisionMap[LEN][LEN]);
+	void assignTask(const vector<int>& moves, int target, int harbor);
+	pair<int, vector<int>> moveOneStep(int collisionMap[LEN][LEN]);
+	void redoOneStep(int collisionMap[LEN][LEN],int originMove);
 	int command(int realMove);
 	Coord getNextPos();
 };

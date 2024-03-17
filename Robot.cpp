@@ -19,15 +19,17 @@ void Robot::update(int hasGoods, int x, int y, int status) {
 	this->status = status;
 }
 
-void Robot::assignTask(const vector<int>& moves, int target)
+void Robot::assignTask(const vector<int>& moves, int target, int atHarbor)
 {
 	this->moves = moves;
 	this->curMoveCount = 0;
 	this->target = target;
+	this->atHarbor = atHarbor;
 }
 
-pair<int,int> Robot::moveOneStep(int collisionMap[LEN][LEN])
+pair<int,vector<int>> Robot::moveOneStep(int collisionMap[LEN][LEN])
 {
+	vector<int> collisions;
 	//cerr << id << "find" << endl;
 	// 返回值第一项代表移动方向，第二项代表冲突的机器人Id
 	int expectedMove;
@@ -62,8 +64,9 @@ pair<int,int> Robot::moveOneStep(int collisionMap[LEN][LEN])
 		// 先判断能否停止
 		if (collisionMap[x][y] >> 16 == 0)
 		{ // 可以停止
-			collisionMap[x][y] |= (id + 1) << 16; // 锁定位置
-			return make_pair(-1, -1);
+			//collisionMap[x][y] |= (id + 1) << 16; // 锁定位置
+			collisionMap[x][y] = (collisionMap[x][y] & 0xFFFF) | ((id + 1) << 16);
+			return make_pair(-1, collisions);
 		}
 		else
 		{ // 不能停止，寻找一个方向避让
@@ -91,16 +94,17 @@ pair<int,int> Robot::moveOneStep(int collisionMap[LEN][LEN])
 						)	
 					)
 				{
-					collisionMap[avoidPos.x][avoidPos.y] |= (id + 1) << 16; // 锁定位置
-					return make_pair(i, -1); // 这里直接return了，如果不直接return需要break
+					// collisionMap[avoidPos.x][avoidPos.y] |= (id + 1) << 16; // 锁定位置
+					collisionMap[avoidPos.x][avoidPos.y] = (collisionMap[avoidPos.x][avoidPos.y] & 0xFFFF) | ((id + 1) << 16);
+					return make_pair(i, collisions); // 这里直接return了，如果不直接return需要break
 				}
 			}
 			if (idx == 4) // 无法避让
 			{ // 强制前进，发出冲突机器人编号
-				int collisionId; // 这里存储的是+1后的id
+
 				if ((collisionMap[expectedPos.x][expectedPos.y] >> 16) != 0)
 				{
-					collisionId = collisionMap[expectedPos.x][expectedPos.y] >> 16;
+					collisions.push_back((collisionMap[expectedPos.x][expectedPos.y] >> 16) - 1);
 				}
 				if (expectedMove != -1
 					&&
@@ -108,22 +112,31 @@ pair<int,int> Robot::moveOneStep(int collisionMap[LEN][LEN])
 					&&
 					(collisionMap[x][y] >> 16) == (collisionMap[expectedPos.x][expectedPos.y] & 0xffff))
 				{
-					collisionId = min(collisionId, collisionMap[x][y] >> 16);
+					collisions.push_back((collisionMap[x][y] >> 16) - 1);
 				}
-				collisionMap[expectedPos.x][expectedPos.y] |= (id + 1) << 16; // 锁定位置
-				return make_pair(expectedMove, collisionId-1);
+				//collisionMap[expectedPos.x][expectedPos.y] |= (id + 1) << 16; // 锁定位置
+				collisionMap[expectedPos.x][expectedPos.y] = (collisionMap[expectedPos.x][expectedPos.y] & 0xFFFF) | ((id + 1) << 16);
+				return make_pair(expectedMove, collisions);
 			}
 		}
 	}
 	else
 	{
 		// 锁定该位置，把高16位设置为这个机器人id+1
-		collisionMap[expectedPos.x][expectedPos.y] |= (id + 1) << 16; // 锁定位置
-		return make_pair(expectedMove, -1);
+		//collisionMap[expectedPos.x][expectedPos.y] |= (id + 1) << 16; // 锁定位置
+		collisionMap[expectedPos.x][expectedPos.y] = (collisionMap[expectedPos.x][expectedPos.y] & 0xFFFF) | ((id + 1) << 16);
+		return make_pair(expectedMove, collisions);
 	}
 
-	return make_pair(-1, -1); // 不会到达此句
+	return make_pair(-1, collisions); // 不会到达此句
 	
+}
+
+void Robot::redoOneStep(int collisionMap[LEN][LEN], int originMove)
+{
+	Coord originPos = Coord(x, y) + originMove;
+	if (collisionMap[originPos.x][originPos.y] >> 16 == id + 1)
+		collisionMap[originPos.x][originPos.y] &= 0x0000ffff;
 }
 
 int Robot::command(int realMove)
@@ -158,6 +171,9 @@ int Robot::command(int realMove)
 	}
 	else
 	{
+		// 第一种情况，在港口但找不到新的货了，此时机器人已经完成了target切换，这里继续将target保持为-1（实际上没有必要，但不影响）
+		// 第二种情况，到了货物的地方但没有拿到货，target切换无效，在此处完成target=1，让机器人去港口
+		// 第三种情况，机器人初始空手去港口或者第二种情况去港口，这里强制将target切换为-1让机器人去找货物
 		if (realMove == -1) // 正常暂停
 		{
 			if (atHarbor == -1)

@@ -111,17 +111,17 @@ void Scheduler::findHarbor(int robotId)
 	}
 	if (bestHarborId != -1)
 	{
-		robot[robotId].assignTask(pathPlanner.getPathToHarbor(bestHarborId, Coord(robot[robotId].x, robot[robotId].y)), 2);
-		robot[robotId].atHarbor = bestHarborId; // 设置目标港口
+		robot[robotId].assignTask(pathPlanner.getPathToHarbor(bestHarborId, Coord(robot[robotId].x, robot[robotId].y)), 2, bestHarborId);
 	}
 
 }
 
 void Scheduler::findProductAndHarbor(int robotId)
 {
-	int startHarbor = robot[robotId].atHarbor; // 将此前设置的目标港口作为出发港口（实际上可能需要再次检测）
+	int startHarbor = robot[robotId].atHarbor; // 将此前findHarbor设置的目标港口作为出发港口
 	if (startHarbor == -1)
 	{
+		cerr << "error origin harbor" << endl;
 		return;
 	}
 
@@ -154,10 +154,9 @@ void Scheduler::findProductAndHarbor(int robotId)
 
 	if (bestHarborId != -1)
 	{
-		robot[robotId].assignTask(pathPlanner.getPathFromHarbor(startHarbor, Coord(products[bestProductId].x, products[bestProductId].y)), 0);
+		robot[robotId].assignTask(pathPlanner.getPathFromHarbor(startHarbor, Coord(products[bestProductId].x, products[bestProductId].y)), 0, -1);
 		products[bestProductId].locked = true;
 		robot[robotId].carryProduct = bestProductId;
-		robot[robotId].atHarbor = -1;
 	}
 
 
@@ -204,6 +203,8 @@ void Scheduler::Update() {
 		}
 	}
 	//发出指令控制机器人移动
+
+	// 碰撞图初始化
 	int collisionMap[LEN][LEN] = { 0 };
 	for (int i = 0; i < LEN; i++)
 	{
@@ -223,29 +224,48 @@ void Scheduler::Update() {
 	}
 	for (int i = 0; i < ROBOT_NUM; i++)
 	{
-		collisionMap[robot[i].x][robot[i].y] = i + 1;
+		collisionMap[robot[i].x][robot[i].y] = i + 1; // 注意这里是i+1，因为机器人id从0开始
 	}
 
-	int moveOfRobots[10];
-	for (int i = 0; i < ROBOT_NUM; i++)
+	// 移动栈和剩余栈
+	stack<pair<int, int>> moveRobots;
+	stack<pair<int, int>> restRobots;
+	// 剩余栈初始化
+	for (int i = ROBOT_NUM - 1; i >= 0; i--) 
 	{
-		pair<int, int> moveAndCollision;
-		//cerr << '(' << robot[i].x << ',' << robot[i].y << ')';
-		moveAndCollision = robot[i].moveOneStep(collisionMap);
-		moveOfRobots[i] = moveAndCollision.first;
-		Coord newCoord = Coord(robot[i].x, robot[i].y) + moveOfRobots[i];
-		//cerr << '(' << newCoord.x << ',' << newCoord.y << ')';
-		//cerr << endl;
-		if (moveAndCollision.second != -1)
+		restRobots.push(make_pair(i,-1)); // first是机器人id，second是机器人的移动方向
+	}
+
+	// 找到每个机器人的无冲突移动方向
+	while(!restRobots.empty())
+	{
+		pair<int,int> curRobot = restRobots.top();
+		restRobots.pop();
+		
+		pair<int, vector<int>> moveAndCollision = robot[curRobot.first].moveOneStep(collisionMap);
+
+		while (moveAndCollision.second.size())
 		{
-			cerr<<"Not implement"<<endl;
+			cerr << "tough task" << moveAndCollision.second.size() << endl;
+			pair<int,int> redoRobot = moveRobots.top();
+			moveRobots.pop();
+			robot[redoRobot.first].redoOneStep(collisionMap,redoRobot.second);
+			auto iter = find(moveAndCollision.second.begin(), moveAndCollision.second.end(), redoRobot.first);
+			if (iter != moveAndCollision.second.end())
+				moveAndCollision.second.erase(iter);
+			restRobots.push(redoRobot);
 		}
+		curRobot.second = moveAndCollision.first;
+		moveRobots.push(curRobot);
 	}
 
 	//发出指令控制机器人移动
-	for (int i = 0; i < ROBOT_NUM; i++)
+	while(!moveRobots.empty())
 	{
-		int action = robot[i].command(moveOfRobots[i]);
+		pair<int, int> curRobot = moveRobots.top();
+		moveRobots.pop();
+		int i= curRobot.first;
+		int action = robot[i].command(curRobot.second);
 		if (action == 1) //放下物品
 		{
 			harbor[robot[i].atHarbor].productPrices.push_back(products[robot[i].carryProduct].price);

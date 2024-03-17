@@ -19,6 +19,8 @@ struct Coord
 	Coord operator+(int move) {
 		switch (move)
 		{
+		case -1:
+			return Coord(x, y);
 		case 0:
 			return Coord(x, y + 1);
 		case 1:
