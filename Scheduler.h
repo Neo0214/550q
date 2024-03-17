@@ -29,11 +29,12 @@ private:
     void findProductAndHarbor(int robotId); //找收益率最高的物品和对应港口
     void initHarbor(); // 对港口速度做初始化处理
     vector<int> getFreeBoat(); // 获取空闲船只
-    int selectFastestHarbor(int countNeeded);
+    int selectFastestHarbor(int countNeeded, int timeTocomeBack, int holdedValue);
     int selectAvailableFastestHarborWithGoingFromOriginPoint();
     void loadGoods(Boat* _boat,Harbor* _harbor);
     int getValue(int harborId);
-    int getFutureValue(int harborId, int total);
+    float getFutureValue(int harborId, int total);
+    int getFutureValueFromOriginPoint(int harborId, int total);
     
 public:
     Scheduler();
