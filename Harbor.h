@@ -13,7 +13,7 @@ private:
 public:
     // 动态数据
     vector<int> productPrices;
-    bool isLocked;
+    int leftGoodsNumber; // 通常情况下，都应该是0，除非有船在此处装载，才不是
     // 私有函数
 
 public:

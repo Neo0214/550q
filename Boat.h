@@ -14,6 +14,7 @@ private:
     int status;
     int pos;
     int curCapacity;
+    int curValue;
     int preLoadNum;
     // Ë½ÓÐº¯Êý
 
@@ -27,6 +28,7 @@ public:
     int getStatus();
     int getPos();
     int getCurCapacity();
-    void addGoods(int num);
+    void addGoods(int num, int value);
+    int getCurValue();
     int getPre();
 };
