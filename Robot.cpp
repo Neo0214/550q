@@ -67,9 +67,18 @@ pair<int,int> Robot::moveOneStep(int collisionMap[LEN][LEN])
 		}
 		else
 		{ // 不能停止，寻找一个方向避让
-			int i;
-			for (i = 0; i < 4; i++) // 遍历周围位置
+			// 随机构建一个0到3的数组
+			int a[4] = { 0,1,2,3 };
+			// 随机打乱数组
+			for (int i = 0; i < 4; i++)
 			{
+				int j = rand() % 4;
+				swap(a[i], a[j]);
+			}
+			int idx;
+			for (idx = 0; idx < 4; idx++) // 遍历周围位置
+			{
+				int i = a[idx];
 				if (i == expectedMove)
 					continue;
 				Coord avoidPos = Coord(x, y) + i;
@@ -86,7 +95,7 @@ pair<int,int> Robot::moveOneStep(int collisionMap[LEN][LEN])
 					return make_pair(i, -1); // 这里直接return了，如果不直接return需要break
 				}
 			}
-			if (i == 4) // 无法避让
+			if (idx == 4) // 无法避让
 			{ // 强制前进，发出冲突机器人编号
 				int collisionId; // 这里存储的是+1后的id
 				if ((collisionMap[expectedPos.x][expectedPos.y] >> 16) != 0)

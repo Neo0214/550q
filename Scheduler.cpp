@@ -237,7 +237,9 @@ void Scheduler::Update() {
 		//cerr << '(' << newCoord.x << ',' << newCoord.y << ')';
 		//cerr << endl;
 		if (moveAndCollision.second != -1)
-			cerr << "Not implement error" << endl;
+		{
+			cerr<<"Not implement"<<endl;
+		}
 	}
 
 	//发出指令控制机器人移动

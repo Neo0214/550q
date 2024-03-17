@@ -4,7 +4,7 @@ using namespace std;
 
 int main()
 {
-    srand(0);
+    srand(1);
     Scheduler scheduler;
     while (scheduler.NextFrame())
     {
