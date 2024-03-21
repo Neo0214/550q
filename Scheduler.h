@@ -23,6 +23,7 @@ private:
     // 动态数据
     int frame; // 当前帧号
     int score = 0;
+    int startProductId = 0;
     vector<int> harborWhoGotReceive; // 记录哪个港口在这一帧中接收了货物
 
     // 私有函数

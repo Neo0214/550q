@@ -10,6 +10,7 @@ private:
     // 固定数据
     int Id;
     int x, y;
+    int leftTopX, leftTopY;
     int time;
     int velocity;
 
@@ -25,6 +26,7 @@ public:
     Harbor(int _Id, int _x, int _y, int _time, int _velocity);
     Harbor();
     // 公共函数
+    void getBestCoord(int points[LEN][LEN]);
     void clearOneOrder();
     void addOneOrder();
     void newOrder(int goodsLeft, int boatId);

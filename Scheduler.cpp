@@ -6,7 +6,6 @@ Scheduler::Scheduler() {
 	for (int i = 0; i < 200; i++) {
 		char line[201] = {0};
 		scanf("%s", line);
-		// TODO: 此处改为switch case可以加快速度
 		for (int j = 0; j < 200; j++) {
 			if (line[j] == '.') {
 				map.setPoint(i, j, EMPTY);
@@ -32,8 +31,9 @@ Scheduler::Scheduler() {
 	Coord harborsCoord[10];
 	for (int i = 0; i < 10; i++) {
 		scanf("%d %d %d %d %d", &id, &x, &y, &time, &velocity);
-		harborsCoord[i] = Coord(x, y);
 		harbor[i] = Harbor(id, x, y, time, velocity);
+		harbor[i].getBestCoord(map.point);
+		harborsCoord[i] = Coord(harbor[i].x,harbor[i].y);
 	}
 	// 对港口做初始化处理
 	//initHarbor();
@@ -100,6 +100,13 @@ bool Scheduler::NextFrame() {
 		}
 		products.push_back(Product(x, y, val, frame + 1000, distanceToHarbors));
 	}
+	for (int i = startProductId; i < products.size(); i++)
+	{
+		if (products[i].expireTime <= frame)
+			startProductId++;
+		else
+			break;
+	}
 	for (int i = 0; i < 10; i++) {
 		int hasGoods, x, y, status;
 		scanf("%d %d %d %d", &hasGoods, &x, &y, &status);
@@ -144,18 +151,14 @@ void Scheduler::findHarbor(int robotId)
 
 void Scheduler::findProductAndHarbor(int robotId)
 {
-	int startHarbor = robot[robotId].atHarbor; // 将此前findHarbor设置的目标港口作为出发港口
-	if (startHarbor == -1)
-	{
-		cerr << "error origin harbor" << endl;
+	if (robot[robotId].moves.size() != robot[robotId].curMoveCount) // 如果还有未走完的路不要设置目标
 		return;
-	}
-
+	int startHarbor = robot[robotId].atHarbor; // 将此前findHarbor设置的目标港口作为出发港口
 
 	int bestProductId;
 	int bestHarborId = -1;
 	double maxProfitRate = -1;
-	for (int i=0;i<products.size();i++)
+	for (int i=startProductId;i<products.size();i++)
 	{
 		if(products[i].locked) // 产品被锁定
 			continue;
@@ -169,7 +172,7 @@ void Scheduler::findProductAndHarbor(int robotId)
 			continue;
 		int pathLen2 = products[i].distanceToHarbors[nearestHarborId];
 		int pathLen = pathLen1 + pathLen2;
-		double profitRate = pow(products[i].price,1 + 0.1 * robotId) / pathLen * exp(-0.00001*(products[i].expireTime-frame)) + 1.0 / ((pathLen1 - pathLen2)*(pathLen1 - pathLen2) + 0.5);
+		double profitRate = pow(products[i].price, 1 + 0.1 * robotId) / pathLen * exp(-0.00001 * (products[i].expireTime - frame)) + ((pathLen1 == pathLen2) ? 2 : 0); // 1.0 / ((pathLen1 - pathLen2)*(pathLen1 - pathLen2) + 0.5);
 		if(profitRate > maxProfitRate)
 		{
 			maxProfitRate=profitRate;
@@ -177,7 +180,6 @@ void Scheduler::findProductAndHarbor(int robotId)
 			bestHarborId=nearestHarborId;
 		}
 	}
-
 	if (bestHarborId != -1)
 	{
 		robot[robotId].assignTask(pathPlanner.getPathFromHarbor(startHarbor, Coord(products[bestProductId].x, products[bestProductId].y)), 0, -1);
@@ -235,24 +237,34 @@ void Scheduler::Update() {
 		restRobots.push(make_pair(i,-1)); // first是机器人id，second是机器人的移动方向
 	}
 	// 找到每个机器人的无冲突移动方向
+	int countToughTask = 0;
 	while(!restRobots.empty())
 	{
 		pair<int,int> curRobot = restRobots.top();
 		restRobots.pop();
 		
 		pair<int, vector<int>> moveAndCollision = robot[curRobot.first].moveOneStep(collisionMap);
-
-		while (moveAndCollision.second.size())
-		{
-			//cerr << "tough task" << moveAndCollision.second.size() << endl;
-			pair<int,int> redoRobot = moveRobots.top();
-			moveRobots.pop();
-			robot[redoRobot.first].redoOneStep(collisionMap,redoRobot.second);
-			auto iter = find(moveAndCollision.second.begin(), moveAndCollision.second.end(), redoRobot.first);
-			if (iter != moveAndCollision.second.end())
-				moveAndCollision.second.erase(iter);
-			restRobots.push(redoRobot);
-		}
+		if(countToughTask<=10)
+			while (moveAndCollision.second.size())
+			{
+				// cerr << "tough task" << moveAndCollision.second.size() <<' ' << moveRobots.size() <<endl;
+				countToughTask++;
+				pair<int,int> redoRobot = moveRobots.top();
+				moveRobots.pop();
+				robot[redoRobot.first].redoOneStep(collisionMap,redoRobot.second);
+				auto iter = find(moveAndCollision.second.begin(), moveAndCollision.second.end(), redoRobot.first);
+				if (iter != moveAndCollision.second.end())
+					moveAndCollision.second.erase(iter);
+				restRobots.push(redoRobot);
+			}
+		else
+			while (moveAndCollision.second.size() && !moveRobots.empty())
+			{
+				pair<int,int> redoRobot = moveRobots.top();
+				moveRobots.pop();
+				robot[redoRobot.first].redoOneStep(collisionMap,redoRobot.second);
+				restRobots.push(redoRobot);
+			}
 		curRobot.second = moveAndCollision.first;
 		moveRobots.push(curRobot);
 	}
@@ -512,7 +524,7 @@ void Scheduler::printValue() {
 		for (int j = 0; j < harbor[i].productPrices.size(); j++) {
 			count+=harbor[i].productPrices[j];
 		}
-		cerr<<"harbor "<<i<<" "<<count<<endl;
+		//cerr<<"harbor "<<i<<" "<<count<<endl;
 	}
 	cerr <<"final " << score << endl;
 }

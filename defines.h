@@ -8,6 +8,11 @@
 #define ROBOT_NUM 10
 #define LEN 200 // 地图边长
 
+#define SEA -3
+#define WALL -2
+#define HARBOR -1
+#define EMPTY 0
+
 using namespace std;
 constexpr int reverseMove[4] = { 1,0,3,2 }; // 移动方向反转数组
 struct Coord
