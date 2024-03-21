@@ -6,6 +6,7 @@
 #include "Robot.h"
 #include "Product.h"
 #include "PathPlanner.h"
+#include "args.h"
 
 class Scheduler {
 private:

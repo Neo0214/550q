@@ -172,7 +172,7 @@ void Scheduler::findProductAndHarbor(int robotId)
 			continue;
 		int pathLen2 = products[i].distanceToHarbors[nearestHarborId];
 		int pathLen = pathLen1 + pathLen2;
-		double profitRate = pow(products[i].price, 1 + 0.1 * robotId) / pathLen * exp(-0.00001 * (products[i].expireTime - frame)) + ((pathLen1 == pathLen2) ? 2 : 0); // 1.0 / ((pathLen1 - pathLen2)*(pathLen1 - pathLen2) + 0.5);
+		double profitRate = pow(products[i].price, 1 + valueImportance * robotId) / pathLen * exp(-expireTimeImportance * (products[i].expireTime - frame)) + ((pathLen1 == pathLen2) ? sameHarborBonus : 0); // 1.0 / ((pathLen1 - pathLen2)*(pathLen1 - pathLen2) + 0.5);
 		if(profitRate > maxProfitRate)
 		{
 			maxProfitRate=profitRate;
