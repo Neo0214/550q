@@ -7,11 +7,8 @@ Product::Product(int x, int y, int price, int expireTime, int distanceToHarbors[
 	this->expireTime = expireTime;
 	this->price = price;
 	memcpy(this->distanceToHarbors, distanceToHarbors, sizeof(int) * HARBOR_NUM);
-}
 
-int Product::getNearestHarborId()
-{
-	int minDistance = 1000000;
+	int minDistance = INT_MAX;
 	int minDistanceId = -1;
 	for (int i = 0; i < HARBOR_NUM; i++)
 	{
@@ -23,6 +20,15 @@ int Product::getNearestHarborId()
 			minDistanceId = i;
 		}
 	}
-	return minDistanceId;
+	this->nearestHarborId = minDistanceId;
+	this->bestProfitRate = double(price) / minDistance;
+
 }
+
+int Product::getNearestHarborId()
+{
+	return nearestHarborId;
+}
+
+
 

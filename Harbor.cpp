@@ -62,3 +62,47 @@ void Harbor::newOrder(int goodsLeft, int boatId) {
 	orders.push_back(order);
 	//this->endingCost-=0.5;
 }
+
+double Harbor::getExpectedProfitRate(int robotId, double exceptProfit)
+{
+	removeProfitRate(exceptProfit); // 先删除
+	int idex = find(robotsGoalHarbor.begin(), robotsGoalHarbor.end(), robotId) - robotsGoalHarbor.begin();
+	double sum = accumulate(
+		expectedProfitRate.begin() + std::min(productPerAgent * idex,int(expectedProfitRate.size())),
+		expectedProfitRate.begin() + std::min(productPerAgent * (idex + 1), int(expectedProfitRate.size())),
+		0.0);
+	appendProfitRate(exceptProfit); // 再添加
+	return sum;
+}
+
+void Harbor::appendRobot(int robotId)
+{
+	robotsGoalHarbor.push_back(robotId);
+	return;
+}
+
+void Harbor::removeRobot(int robotId)
+{
+	robotsGoalHarbor.erase(find(robotsGoalHarbor.begin(), robotsGoalHarbor.end(), robotId));
+	return;
+}
+
+void Harbor::appendProfitRate(double profitRate)
+{
+	auto iter = lower_bound(expectedProfitRate.begin(), expectedProfitRate.end(), profitRate, [](double a, double b) {
+		return a > b;
+		}); // 二分查找
+	expectedProfitRate.insert(iter, profitRate);
+	return;
+}
+
+void Harbor::removeProfitRate(double profitRate)
+{
+	expectedProfitRate.erase(find(expectedProfitRate.begin(), expectedProfitRate.end(), profitRate));
+	return;
+}
+
+
+
+
+

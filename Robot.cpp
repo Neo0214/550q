@@ -19,12 +19,13 @@ void Robot::update(int hasGoods, int x, int y, int status) {
 	this->status = status;
 }
 
-void Robot::assignTask(const vector<int>& moves, int target, int atHarbor)
+void Robot::assignTask(const vector<int>& moves, int target, int atHarbor, int goalHarbor)
 {
 	this->moves = moves;
 	this->curMoveCount = 0;
 	this->target = target;
 	this->atHarbor = atHarbor;
+	this->goalHarbor = goalHarbor;
 }
 
 pair<int,vector<int>> Robot::moveOneStep(int collisionMap[LEN][LEN])
