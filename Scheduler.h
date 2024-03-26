@@ -31,11 +31,11 @@ private:
     void findHarbor(int robotId); //找最近的港口
     void findProductAndHarbor(int robotId); //找收益率最高的物品和对应港口
     vector<int> getFreeBoat(); // 获取空闲船只
-    int selectFastestHarbor(int countNeeded, int timeTocomeBack, int holdedValue);
+    int selectFastestHarbor(int countNeeded, int timeTocomeBack, int holdedValue, int boatId);
     int selectAvailableFastestHarborWithGoingFromOriginPoint();
     void loadGoods(Boat* _boat,Harbor* _harbor);
     //int getValue(int harborId);
-    float getFutureValue(int harborId, int total);
+    float getFutureValue(int harborId, int total, int boatId);
     int getFutureValueFromOriginPoint(int harborId, int total);
     void clearWhenBoatComeBack(int boatId, int harborId);
     void clearWhenBoatSwitch(int boatId, int harborId);
@@ -48,4 +48,5 @@ public:
     bool NextFrame();
     void Update();
     void printValue();
+    void printDebug();
 };

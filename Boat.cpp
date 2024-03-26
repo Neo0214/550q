@@ -10,6 +10,7 @@ Boat::Boat(int _id, int _capacity)
 	preLoadNum = 0;
 	curValue = 0;
 	orders=vector<Order>();
+	turns = 0;
 }
 Boat::Boat() {
 
@@ -28,13 +29,14 @@ void Boat::gotoHarbor(int harborId) {
 	
 }
 
-void Boat::comeBack() {
+void Boat::comeBack(int frame) {
 	printf("go %d\n", id);
-	//cerr << "boat " << id << " come back with cap " << this->curCapacity << endl;
+	cerr << "boat " << id << " come back with cap " << this->curCapacity << endl;
 	this->pos = -1;
 	this->status = MOVING;
 	this->curCapacity = 0;
 	this->curValue = 0;
+	this->turns++;
 }
 
 int Boat::getStatus() {

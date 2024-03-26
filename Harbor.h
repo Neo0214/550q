@@ -21,7 +21,9 @@ public:
     vector<int> productPrices;
     vector<Order> orders; // 记录港口已经被分配的订单
     float endingCost = 1; // 快结束时，是否被选中
-
+    int totalReceived = 1;
+    bool tiger = false;
+    double prioTiger = 1;
 
     vector<double> expectedProfitRate; // 港口附近的物品的收益率（从大到小）
     vector<int> robotsGoalHarbor; // 负责该港口的机器人

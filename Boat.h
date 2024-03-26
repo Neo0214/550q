@@ -19,6 +19,8 @@ private:
     int curValue;
     int preLoadNum;
     vector<Order> orders;
+    int turns;
+    bool atLast = false;
     // 私有函数
 
 public:
@@ -27,7 +29,7 @@ public:
     // 公共函数
     void update(int status, int pos);
     void gotoHarbor(int harborId);
-    void comeBack();
+    void comeBack(int frame);
     int getStatus();
     int getPos();
     int getCurCapacity();
