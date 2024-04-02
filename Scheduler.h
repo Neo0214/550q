@@ -6,6 +6,7 @@
 #include "Robot.h"
 #include "Product.h"
 #include "PathPlanner.h"
+#include "args.h"
 
 class Scheduler {
 private:
@@ -18,28 +19,34 @@ private:
     
     PathPlanner pathPlanner; // 路径规划器
 
-    int harborVelIndex[10]; // 港口速度排序索引
     int boatCapacity; // 船的容量
+    int minBackTime; // 最小回港时间
     // 动态数据
     int frame; // 当前帧号
     int score = 0;
+    int startProductId = 0;
+    vector<int> harborWhoGotReceive; // 记录哪个港口在这一帧中接收了货物
 
     // 私有函数
     void findHarbor(int robotId); //找最近的港口
     void findProductAndHarbor(int robotId); //找收益率最高的物品和对应港口
-    void initHarbor(); // 对港口速度做初始化处理
     vector<int> getFreeBoat(); // 获取空闲船只
-    int selectFastestHarbor(int countNeeded, int timeTocomeBack, int holdedValue);
+    int selectFastestHarbor(int countNeeded, int timeTocomeBack, int holdedValue, int boatId);
     int selectAvailableFastestHarborWithGoingFromOriginPoint();
     void loadGoods(Boat* _boat,Harbor* _harbor);
-    int getValue(int harborId);
-    float getFutureValue(int harborId, int total);
+    //int getValue(int harborId);
+    float getFutureValue(int harborId, int total, int boatId);
     int getFutureValueFromOriginPoint(int harborId, int total);
-    
+    void clearWhenBoatComeBack(int boatId, int harborId);
+    void clearWhenBoatSwitch(int boatId, int harborId);
+    int hasBoat(int harborId);
+    void synchronizeWhenGoOut(int boatId, int harborId);
+    void synchronizeWhenSwitch(int boatId, int harborId);
 public:
     Scheduler();
 
     bool NextFrame();
     void Update();
     void printValue();
+    void printDebug();
 };

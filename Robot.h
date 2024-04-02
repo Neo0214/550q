@@ -20,6 +20,7 @@ public:
 	int curMoveCount=0; // 当前移动的步数
 	int target=1; 
 	int atHarbor=-1; // 目标港口
+	int goalHarbor = -1; // 所在港口
 	int carryProduct = -1;
 
 	// 私有函数
@@ -28,7 +29,7 @@ public:
 	Robot() {};
 	// 公共函数
 	void update(int hasGoods, int x, int y, int status);
-	void assignTask(const vector<int>& moves, int target, int harbor);
+	void assignTask(const vector<int>& moves, int target, int atHarbor, int goalHarbor);
 	pair<int, vector<int>> moveOneStep(int collisionMap[LEN][LEN]);
 	void redoOneStep(int collisionMap[LEN][LEN],int originMove);
 	int command(int realMove);

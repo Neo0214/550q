@@ -10,6 +10,8 @@ public:
 	int expireTime; //到期时间（帧）
 	int price;
 
+	int nearestHarborId;
+	double bestProfitRate;
 	// 动态数据
 	bool locked = false; // 是否被锁定
 

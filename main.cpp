@@ -1,10 +1,11 @@
 #include "defines.h"
 #include "Scheduler.h"
+#include "args.h"
 using namespace std;
 
 int main()
 {
-    srand(0);
+    srand(randomSeed);
     Scheduler scheduler;
     while (scheduler.NextFrame())
     {
