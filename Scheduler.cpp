@@ -457,7 +457,7 @@ int Scheduler::getFutureValueFromOriginPoint(int harborId, int total) {
 	if (loadcost + harbor[harborId].time*2 + frame >= 15000) {
 		return -1;
 	}
-	return count/float(loadcost+(harbor[harborId].time/(frameImpactFactor*frame))*2);
+	return count/float(loadcost+(harbor[harborId].time/(pow(frameImpactFactor, frame))*2));
 }
 
 int Scheduler::selectAvailableFastestHarborWithGoingFromOriginPoint() {
@@ -521,7 +521,7 @@ float Scheduler::getFutureValue(int harborId, int total, int boatId) {
 	}
 	// 该harbor可提供的货物数量应该约等于countNeeded
 	if (total - number < 500/(frame/harbor[harborId].totalReceived) || boat[boatId].atLast) {
-		return count / float(loadcost + 500 + harbor[harborId].time/(frameImpactFactor * frame));
+		return count / float(loadcost + 500 + harbor[harborId].time/(pow(frameImpactFactor,frame)));
 	}
 	return -2;
 }
