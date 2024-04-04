@@ -12,7 +12,6 @@ private:
     int Id;
     int x, y;
     int leftTopX, leftTopY;
-    int time;
     int velocity;
 
     float area;
@@ -30,7 +29,7 @@ public:
     // 私有函数
 
 public:
-    Harbor(int _Id, int _x, int _y, int _time, int _velocity);
+    Harbor(int _Id, int _x, int _y, int _velocity);
     Harbor();
     // 公共函数
     void getBestCoord(int points[LEN][LEN]);

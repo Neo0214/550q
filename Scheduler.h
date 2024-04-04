@@ -12,11 +12,12 @@ class Scheduler {
 private:
     // 固定数据
     Map map;
-    Harbor harbor[10];
-    Boat boat[5];
-    Robot robot[10];
+    vector<Harbor> harbors;
+    vector<Boat> boats;
+    vector<Robot> robots;
     vector<Product> products;
-    
+    int harborNum; // 港口数量
+    int robotNum; // 机器人数量
     PathPlanner pathPlanner; // 路径规划器
 
     int boatCapacity; // 船的容量

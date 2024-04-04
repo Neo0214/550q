@@ -28,7 +28,7 @@ public:
 	Robot(int id, int _x, int _y);
 	Robot() {};
 	// ¹«¹²º¯Êý
-	void update(int hasGoods, int x, int y, int status);
+	void update(int hasGoods, int x, int y);
 	void assignTask(const vector<int>& moves, int target, int atHarbor, int goalHarbor);
 	pair<int, vector<int>> moveOneStep(int collisionMap[LEN][LEN]);
 	void redoOneStep(int collisionMap[LEN][LEN],int originMove);

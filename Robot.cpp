@@ -8,7 +8,7 @@ Robot::Robot(int id, int _x, int _y) {
 	status = ON;
 }
 
-void Robot::update(int hasGoods, int x, int y, int status) {
+void Robot::update(int hasGoods, int x, int y) {
 	if (this->hasGoods && !hasGoods)
 		target = -1; // 已在港口放下物品
 	if (!this->hasGoods && hasGoods)
@@ -16,7 +16,6 @@ void Robot::update(int hasGoods, int x, int y, int status) {
 	this->hasGoods = hasGoods;
 	this->x = x;
 	this->y = y;
-	this->status = status;
 }
 
 void Robot::assignTask(const vector<int>& moves, int target, int atHarbor, int goalHarbor)

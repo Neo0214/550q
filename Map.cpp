@@ -6,7 +6,7 @@ Map::Map()
 	memset(point, 0, sizeof(point));
 }
 
-void Map::setPoint(int x, int y, int type)
+void Map::setPoint(int x, int y, char type)
 {
 	point[x][y] = type;
 }

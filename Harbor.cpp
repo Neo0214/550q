@@ -1,11 +1,10 @@
 #include "Harbor.h"
 
-Harbor::Harbor(int _Id,int _x, int _y, int _time, int _velocity)
+Harbor::Harbor(int _Id,int _x, int _y, int _velocity)
 {
 	Id = _Id;
 	leftTopX = _x;
 	leftTopY = _y;
-	time = _time;
 	velocity = _velocity;
 	orders=vector<Order>();
 	area = 0;

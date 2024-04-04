@@ -2,9 +2,9 @@
 
 PathPlanner::PathPlanner()
 {
-	// 为harborsPaths分配内存为HARBOR_NUM*LEN*LEN
-	harborsPaths = new Path**[HARBOR_NUM];
-	for (int i = 0; i < HARBOR_NUM; i++)
+	// 为harborsPaths分配内存为harborNum*LEN*LEN
+	harborsPaths = new Path**[5];
+	for (int i = 0; i < 5; i++)
 	{
 		harborsPaths[i] = new Path*[LEN];
 		for (int j = 0; j < LEN; j++)
@@ -15,7 +15,7 @@ PathPlanner::PathPlanner()
 }
 
 
-void PathPlanner::searchAllPath(const int my_map[LEN][LEN], Coord startCoord, Path** path) // path是得到的路径矩阵
+void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, Path** path) // path是得到的路径矩阵
 {
 	queue<Coord> q;
 	bool visited[LEN][LEN] = { { 0 } };
@@ -70,9 +70,9 @@ void PathPlanner::searchAllPath(const int my_map[LEN][LEN], Coord startCoord, Pa
 
 
 
-void PathPlanner::initHarborPath(const int my_map[LEN][LEN],Coord coord[HARBOR_NUM])
+void PathPlanner::initHarborPath(const char my_map[LEN][LEN],Coord coord[5])
 {
-	for (int i = 0; i < HARBOR_NUM; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		//harborCoord[i]= coord[i]; // 记录港口坐标
 		searchAllPath(my_map,coord[i],harborsPaths[i]);

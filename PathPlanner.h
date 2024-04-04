@@ -17,21 +17,21 @@ class PathPlanner
 // 私有数据
 private:
 	Path*** harborsPaths; // 从所有港口到所有点的路径
-	//Coord harborCoord[HARBOR_NUM]; // 记录港口坐标
+	//Coord harborCoord[harborNum]; // 记录港口坐标
 
 	
 
 // 私有函数
 private:
 	// 搜索从startCoord开始的到所有点的路径
-	void searchAllPath(const int my_map[LEN][LEN],Coord startCoord, Path** path);
+	void searchAllPath(const char my_map[LEN][LEN],Coord startCoord, Path** path);
 
 
 public:
 	PathPlanner();
 
 	// 以地图初始化路径规划器获取路径
-	void initHarborPath(const int my_map[LEN][LEN],Coord coord[HARBOR_NUM]);
+	void initHarborPath(const char my_map[LEN][LEN],Coord coord[5]);
 
 	// 获取从srcCoord到harborId的路径
 	vector<int> getPathToHarbor(int harborId, Coord srcCoord);
