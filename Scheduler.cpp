@@ -19,7 +19,7 @@ Scheduler::Scheduler() {
 				this->boatBuyPlace.push_back(Coord(i, j + 1));
 				break;
 			case DELIVERY:
-				harbors.push_back(Harbor(sellPlace--, i, j, 0));
+				this->boatDeliveryPlace.push_back(Delivery(Coord(i,j),sellPlace--));
 				break;
 			}
 			
@@ -33,10 +33,6 @@ Scheduler::Scheduler() {
 		harbors.push_back(Harbor(id, x, y, velocity));
 	}
 	// 挪一下，把harbor挪到前半，-n交货港挪到后面
-	vector<Harbor> tmp=vector<Harbor>();
-	tmp.insert(tmp.end(), harbors.begin(), harbors.begin() + (-sellPlace) - 1);
-	harbors.erase(harbors.begin(), harbors.begin() + (-sellPlace) - 1);
-	harbors.insert(harbors.end(), tmp.begin(), tmp.end());
 	this->robots=vector<Robot>();
 	this->boats=vector<Boat>();
 	int Capacity = 0;
@@ -45,7 +41,7 @@ Scheduler::Scheduler() {
 
 	// 生成船运路线图
 	this->boatPathPlanner=BoatPathPlanner();
-	this->boatPathPlanner.initBoatPathPlanner(map.point, harbors, boatBuyPlace, harborNum);
+	this->boatPathPlanner.initBoatPathPlanner(map.point, harbors, boatBuyPlace, boatDeliveryPlace);
 
 	// 结尾
 	char end[100];

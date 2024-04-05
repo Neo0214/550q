@@ -29,6 +29,10 @@
 #define OVERPASS_MAIN 'c'
 #define DELIVERY 'T'
 
+#define FORWARD 0
+#define LEFTTURN 1
+#define RIGHTTURN 2
+
 using namespace std;
 constexpr int reverseMove[4] = { 1,0,3,2 }; // 移动方向反转数组
 
