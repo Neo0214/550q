@@ -27,11 +27,19 @@ Scheduler::Scheduler() {
 	}
 	
 	scanf("%d", &this->harborNum);
+	vector<Coord> harborsCoord = vector<Coord>(harborNum);
 	for (int i = 0; i < harborNum; i++) {
 		int id, x, y, velocity;
 		scanf("%d %d %d %d", &id, &x, &y, &velocity);
-		harbors.push_back(Harbor(id, x, y, velocity));
+		Harbor curHarbor = Harbor(id, x, y, velocity);
+		curHarbor.getBestCoord(map.point);
+		harbors.push_back(curHarbor);
+		harborsCoord[i] = curHarbor.robotCoord;
 	}
+	pathPlanner.initHarborPath(map.point, harborsCoord);
+	cerr << "initHarborPath ok" << endl;
+
+
 	// 挪一下，把harbor挪到前半，-n交货港挪到后面
 	vector<Harbor> tmp=vector<Harbor>();
 	tmp.insert(tmp.end(), harbors.begin(), harbors.begin() + (-sellPlace) - 1);
@@ -46,6 +54,7 @@ Scheduler::Scheduler() {
 	// 生成船运路线图
 	this->boatPathPlanner=BoatPathPlanner();
 	this->boatPathPlanner.initBoatPathPlanner(map.point, harbors, boatBuyPlace, harborNum);
+	cerr << "initBoatPath ok" << endl;
 
 	// 结尾
 	char end[100];
@@ -224,16 +233,10 @@ void Scheduler::Update() {
 	{
 		for (int j = 0; j < LEN; j++)
 		{
-			switch (map.point[i][j])
-			{
-				case EMPTY:
-				case HARBOR:
-					collisionMap[i][j] = 0;
-					break;
-				default:
-					collisionMap[i][j] = -1;
-					break;
-			}
+			if(isRobotPath(map.point[i][j]))
+				collisionMap[i][j] = 0;
+			else
+				collisionMap[i][j] = -1;
 		}
 	}
 	for (int i = 0; i < robotNum; i++)

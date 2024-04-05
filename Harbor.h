@@ -6,17 +6,16 @@
 #include "Coord.h"
 
 class Harbor {
-    friend class Map;
-    friend class Scheduler;
-private:
+public:
     // 固定数据
     int Id;
-    int x, y;
-    int leftTopX, leftTopY;
-    int velocity;
+    Coord robotCoord; // 港口中的机器人目标坐标
+    Coord boatCoord; // 港口中（靠泊）的船核心点坐标
     Coord berthCoord; // 停靠目标坐标
+    int velocity;
+    
 
-    float area;
+    //float area;
 public:
     // 动态数据
     vector<int> productPrices;
@@ -34,7 +33,7 @@ public:
     Harbor(int _Id, int _x, int _y, int _velocity);
     Harbor();
     // 公共函数
-    void getBestCoord(int points[LEN][LEN]);
+    void getBestCoord(char points[LEN][LEN]);
     void clearOneOrder();
     void addOneOrder();
     void newOrder(int goodsLeft, int boatId);
@@ -43,7 +42,4 @@ public:
     void removeRobot(int robotId);
     void appendProfitRate(double profitRate);
     void removeProfitRate(double profitRate);
-    Coord getPos();
-    Coord getBerthCoord();
-    void setBerthCoord(Coord coord);
 };

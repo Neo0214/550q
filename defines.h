@@ -33,4 +33,6 @@ using namespace std;
 constexpr int reverseMove[4] = { 1,0,3,2 }; // 移动方向反转数组
 
 
+#define isRobotPath(point) (point == EMPTY_SPACE || point == MAIN_LAND || point == BUY_ROBOT_SPACE \
+	|| point == HARBOR_SPACE || point == OVERPASS || point == OVERPASS_MAIN)
 

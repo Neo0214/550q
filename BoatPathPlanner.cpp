@@ -14,25 +14,25 @@ BoatPathPlanner::BoatPathPlanner() {
 
 void BoatPathPlanner::generateBerthCoord(vector<Harbor>& harbors, const char my_map[LEN][LEN]) {
 	for (int i = 0; i < harbors.size(); i++) {
-		Coord leftTop = harbors[i].getPos();
+		Coord leftTop = harbors[i].boatCoord;
 		if (my_map[leftTop.x][leftTop.y + 2] == HARBOR_SPACE) {
 			// 说明是横着的
 			if (my_map[leftTop.x - 1][leftTop.y] == LOAD_SPACE) {
 				// 说明是上覆盖型
-				harbors[i].setBerthCoord(Coord(leftTop.x - 2, leftTop.y + 1));
+				harbors[i].berthCoord=Coord(leftTop.x - 2, leftTop.y + 1);
 			}
 			else {
-				harbors[i].setBerthCoord(Coord(leftTop.x + 3, leftTop.y + 1));
+				harbors[i].berthCoord=Coord(leftTop.x + 3, leftTop.y + 1);
 			}
 		}
 		else {
 			// 说明是竖着的
 			if (my_map[leftTop.x][leftTop.y - 1] == LOAD_SPACE) {
 				// 说明是左覆盖型
-				harbors[i].setBerthCoord(Coord(leftTop.x + 1, leftTop.y - 2));
+				harbors[i].berthCoord=Coord(leftTop.x + 1, leftTop.y - 2);
 			}
 			else {
-				harbors[i].setBerthCoord(Coord(leftTop.x + 1, leftTop.y + 3));
+				harbors[i].berthCoord=Coord(leftTop.x + 1, leftTop.y + 3);
 			}
 		}
 	}
@@ -61,7 +61,7 @@ void BoatPathPlanner::initBoatPathPlanner(const char my_map[LEN][LEN], vector<Ha
 		BFSSearch(my_map, buyPlace[i]);
 		// 此时已生成全图的方向溯源图
 		for (int j = harborStartIndex; j < deliveryStartIndex; j++) {
-			vector<int> action = getActions(buyPlace[i], harbors[j-buyPlace.size()].getBerthCoord());
+			vector<int> action = getActions(buyPlace[i], harbors[j-buyPlace.size()].berthCoord);
 			berth[i].edges.push_back(Edge(action, action.size()));
 		}
 		refreshPath();

@@ -1,20 +1,5 @@
 #include "PathPlanner.h"
 
-PathPlanner::PathPlanner()
-{
-	// 为harborsPaths分配内存为harborNum*LEN*LEN
-	harborsPaths = new Path**[5];
-	for (int i = 0; i < 5; i++)
-	{
-		harborsPaths[i] = new Path*[LEN];
-		for (int j = 0; j < LEN; j++)
-		{
-			harborsPaths[i][j] = new Path[LEN];
-		}
-	}
-}
-
-
 void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, Path** path) // path是得到的路径矩阵
 {
 	queue<Coord> q;
@@ -22,17 +7,6 @@ void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, P
 	q.push(startCoord);
 	path[startCoord.x][startCoord.y].distance = 0;
 	visited[startCoord.x][startCoord.y] = true;
-
-	// 从整个港口开始搜
-	//queue<Coord> q;
-	//bool visited[LEN][LEN] = { {0} };
-	//for (int i = 0; i < 4; i++) {
-	//	for (int j = 0; j < 4; j++) {
-	//		q.push(Coord(startCoord.x + i, startCoord.y + j));
-	//		path[startCoord.x + i][startCoord.y + j].distance = 0;
-	//		visited[startCoord.x + i][startCoord.y + j] = true;
-	//	}
-	//}
 
 
 	while (!q.empty())
@@ -56,7 +30,7 @@ void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, P
 			int i = a[idx];
 			Coord neighbor = neighbors[i];
 			if (neighbor.x >= 0 && neighbor.x < LEN && neighbor.y >= 0 && neighbor.y < LEN
-				&& my_map[neighbor.x][neighbor.y] >= -1 && !visited[neighbor.x][neighbor.y])
+				&& isRobotPath(my_map[neighbor.x][neighbor.y]) && !visited[neighbor.x][neighbor.y])
 			{
 				q.push(neighbor);
 				visited[neighbor.x][neighbor.y] = true;
@@ -70,12 +44,23 @@ void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, P
 
 
 
-void PathPlanner::initHarborPath(const char my_map[LEN][LEN],Coord coord[5])
+void PathPlanner::initHarborPath(const char my_map[LEN][LEN],vector<Coord> harborCoords)
 {
-	for (int i = 0; i < 5; i++)
+	// 为harborsPaths分配内存为harborNum*LEN*LEN
+	this->harborNum = harborCoords.size();
+	harborsPaths = new Path** [harborNum];
+	for (int i = 0; i < harborNum; i++)
 	{
-		//harborCoord[i]= coord[i]; // 记录港口坐标
-		searchAllPath(my_map,coord[i],harborsPaths[i]);
+		harborsPaths[i] = new Path* [LEN];
+		for (int j = 0; j < LEN; j++)
+		{
+			harborsPaths[i][j] = new Path[LEN];
+		}
+	}
+
+	for (int i=0;i< harborNum;i++)
+	{
+		searchAllPath(my_map, harborCoords[i], harborsPaths[i]);
 	}
 }
 
