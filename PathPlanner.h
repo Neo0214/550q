@@ -1,7 +1,7 @@
 #pragma once
 #include "defines.h"
 #include "Map.h"
-
+#include "Coord.h"
 
 struct Path
 {

@@ -3,6 +3,7 @@
 #include "Order.h"
 #include "Boat.h"
 #include "args.h"
+#include "Coord.h"
 
 class Harbor {
     friend class Map;
@@ -13,6 +14,7 @@ private:
     int x, y;
     int leftTopX, leftTopY;
     int velocity;
+    Coord berthCoord; // Í£¿¿Ä¿±ê×ø±ê
 
     float area;
 public:
@@ -41,4 +43,7 @@ public:
     void removeRobot(int robotId);
     void appendProfitRate(double profitRate);
     void removeProfitRate(double profitRate);
+    Coord getPos();
+    Coord getBerthCoord();
+    void setBerthCoord(Coord coord);
 };

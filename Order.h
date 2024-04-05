@@ -1,7 +1,7 @@
 #pragma once
 
 #include "defines.h"
-
+#include "Coord.h"
 class Order {
 	friend class Boat;
 	friend class Harbor;

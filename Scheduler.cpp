@@ -1,6 +1,11 @@
 #include "Scheduler.h"
 
 Scheduler::Scheduler() {
+#ifdef TIME_DEBUG
+	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+#endif // TIME_DEBUG
+
+	int sellPlace = -1;
 	map = Map();
 	this->robotNum = 0;
 	for (int i = 0; i < 200; i++) {
@@ -8,22 +13,50 @@ Scheduler::Scheduler() {
 		scanf("%s", line);
 		for (int j = 0; j < 200; j++) {
 			map.setPoint(i, j, line[j]);
+			switch (line[j])
+			{
+			case BUY_SHIP_SPACE:
+				this->boatBuyPlace.push_back(Coord(i, j));
+				break;
+			case DELIVERY:
+				harbors.push_back(Harbor(sellPlace--, i, j, 0));
+				break;
+			}
+			
 		}
 	}
+	
 	scanf("%d", &this->harborNum);
 	for (int i = 0; i < harborNum; i++) {
-		int id,x,y, velocity;
+		int id, x, y, velocity;
 		scanf("%d %d %d %d", &id, &x, &y, &velocity);
 		harbors.push_back(Harbor(id, x, y, velocity));
 	}
+	// 挪一下，把harbor挪到前半，-n交货港挪到后面
+	vector<Harbor> tmp=vector<Harbor>();
+	tmp.insert(tmp.end(), harbors.begin(), harbors.begin() + (-sellPlace) - 1);
+	harbors.erase(harbors.begin(), harbors.begin() + (-sellPlace) - 1);
+	harbors.insert(harbors.end(), tmp.begin(), tmp.end());
 	this->robots=vector<Robot>();
 	this->boats=vector<Boat>();
 	int Capacity = 0;
 	scanf("%d", &Capacity);
 	this->boatCapacity = Capacity;
+
+	// 生成船运路线图
+	this->boatPathPlanner=BoatPathPlanner();
+	this->boatPathPlanner.initBoatPathPlanner(map.point, harbors, boatBuyPlace, boatDeliveryPlace);
+
 	// 结尾
 	char end[100];
 	scanf("%s",end);
+#ifdef TIME_DEBUG
+	std::chrono::steady_clock::time_point ending = std::chrono::steady_clock::now();
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(ending - start);
+	double percent = time_span.count() / 15000 / 5 * 100;
+	cerr << "Time used: " <<time_span.count()<<" "<< setiosflags(ios::fixed) << setprecision(4) << percent << "%" << endl;
+#endif // TIME_DEBUG
+
 	printf("OK\n");
 	fflush(stdout);
 }
@@ -315,74 +348,7 @@ void Scheduler::Update() {
 	//}
 
 	// 首先看船是否需要回去交货
-	for (int i = 0; i < 5; i++) {
-		// 当恰好装满或者时间不够时，立刻回去交货
-		if (boats[i].getCurCapacity() == boatCapacity
-			|| (boats[i].getPos() != -1 && boats[i].getStatus() == NORMAL && 15000 - frame < 1)
-			) {
-			// 触发交货时，对订单进行同步
-			clearWhenBoatComeBack(i, boats[i].getPos());
-			harbors[boats[i].getPos()].prioTiger -= upperRate;
-			boats[i].comeBack(frame);
-			printDebug();
-		}
-	}
-	// 然后看船是否需要换一个港口
-	for (int i = 0; i < 5; i++) {
-		// 当船停靠在某个港口，且该港口恰好没有堆积的货物可以给装载，寻找可换的港口（此处需要考虑换港口是否划算，不要去太少堆积的地方，或者干脆原地等待）
-		if (boats[i].getPos() != -1 && boats[i].getStatus() == NORMAL && boats[i].getPre() == 0 && harbors[boats[i].getPos()].productPrices.size()==0) {
-			int harborId = selectFastestHarbor(boatCapacity-boats[i].getCurCapacity(),500,boats[i].getCurValue(),i);
-			// 若有可换的，立刻过去
-			if (harborId != -1 && harborId!=-2) {
-				harbors[boats[i].getPos()].prioTiger += upperRate;
-				boats[i].gotoHarbor(harborId);
-
-				// 触发换港口时，对订单进行同步
-				synchronizeWhenSwitch(i, harborId);
-				printDebug();
-			}
-			else if (harborId == -2) {
-				continue;
-			}
-			// 如果是-1，说明没有合适的港口，立刻回去交货
-			else {
-				// 触发交货时，对订单进行同步
-				clearWhenBoatComeBack(i, boats[i].getPos());
-				harbors[boats[i].getPos()].prioTiger -= upperRate;
-				boats[i].comeBack(frame);
-				printDebug();
-			}
-		}
-	}
-	vector<int> freeBoat = getFreeBoat();
-	// 根据空闲数量挑选货最多的港口
-	for (int i = 0; i < freeBoat.size(); i++) {
-		int harborId = selectAvailableFastestHarborWithGoingFromOriginPoint();
-		// 要注意此处boat从交货地点出发，要考虑是否还有时间回来交货
-		if (harborId != -1) {
-			//cerr << "eff " << frame/boat[freeBoat[i]].turns << endl;
-			if (15000 - frame < warningRate * frame / boats[freeBoat[i]].turns) {
-				// 可以认为这是最后一次机会了
-				boats[freeBoat[i]].atLast = true;
-				//cerr<<"harbor "<<harborId<<" is the last chance"<<endl;
-				harbors[harborId].prioTiger += upperRate*2;
-			}
-			boats[freeBoat[i]].gotoHarbor(harborId);
-			
-			// 出门时，对订单进行同步
-			synchronizeWhenGoOut(freeBoat[i], harborId);
-			printDebug();
-		}
-	}
-	// 放下物品以后，才能装上船
-		// 单独处理货物搬上船的问题
-		// 如果在港口，将货物搬上船
-	for (int i = 0; i < 5; i++)
-	{
-		if (boats[i].getPos() != -1 && boats[i].getStatus() == NORMAL) {
-			loadGoods(&boats[i], &harbors[boats[i].getPos()]);
-		}
-	}
+	
 		
 
 

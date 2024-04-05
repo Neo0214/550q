@@ -1,7 +1,7 @@
 #pragma once
 #include "defines.h"
 #include "Order.h"
-
+#include "Coord.h"
 #define MOVING 0
 #define NORMAL 1
 #define WAITING 2

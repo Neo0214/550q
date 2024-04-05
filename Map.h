@@ -1,6 +1,6 @@
 #pragma once
 #include "defines.h"
-
+#include "Coord.h"
 
 class Map {
 public:

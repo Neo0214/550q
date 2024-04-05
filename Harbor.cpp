@@ -101,7 +101,16 @@ void Harbor::removeProfitRate(double profitRate)
 	return;
 }
 
+Coord Harbor::getPos() {
+	return Coord(this->leftTopX, this->leftTopY);
+}
 
+void Harbor::setBerthCoord(Coord coord) {
+		this->berthCoord = coord;
+}
 
+Coord Harbor::getBerthCoord() {
+	return this->berthCoord;
+}
 
 

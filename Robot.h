@@ -1,7 +1,7 @@
 #pragma once
 #include "defines.h"
 #include "Product.h"
-
+#include "Coord.h"
 #define ON 1
 #define OFF 0
 

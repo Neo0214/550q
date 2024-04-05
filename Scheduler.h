@@ -7,6 +7,8 @@
 #include "Product.h"
 #include "PathPlanner.h"
 #include "args.h"
+#include "BoatPathPlanner.h"
+#include "Coord.h"
 
 class Scheduler {
 private:
@@ -17,8 +19,11 @@ private:
     vector<Robot> robots;
     vector<Product> products;
     int harborNum; // 港口数量
+    vector<Coord> boatBuyPlace; // 购买船处
+    vector<Coord> boatDeliveryPlace; // 交货处
     int robotNum; // 机器人数量
     PathPlanner pathPlanner; // 路径规划器
+    BoatPathPlanner boatPathPlanner; // 船的路径规划器
 
     int boatCapacity; // 船的容量
     int minBackTime; // 最小回港时间
