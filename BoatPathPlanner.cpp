@@ -13,6 +13,7 @@ BoatPathPlanner::BoatPathPlanner() {
 void BoatPathPlanner::generateBerthCoord(vector<Harbor>& harbors, const char my_map[LEN][LEN]) {
 	for (int i = 0; i < harbors.size(); i++) {
 		Coord leftTop = harbors[i].boatCoord;
+		cerr << leftTop << endl;
 		if (my_map[leftTop.x][leftTop.y + 2] == HARBOR_SPACE) {
 			// 说明是横着的
 			if (my_map[leftTop.x - 1][leftTop.y] == LOAD_SPACE) {
@@ -51,7 +52,7 @@ void BoatPathPlanner::initBoatPathPlanner(const char my_map[LEN][LEN], vector<Ha
 	int harborStartIndex= buyPlace.size();
 	int deliveryStartIndex= buyPlace.size() + harbors.size();
 	// 生成港口停靠目标坐标
-	generateBerthCoord(harbors, my_map);
+	//generateBerthCoord(harbors, my_map);
 	cerr << "out generateBerthCoord" << endl;
 	// 寻路图有三个部分
 	// 购买-->港口
@@ -65,7 +66,7 @@ void BoatPathPlanner::initBoatPathPlanner(const char my_map[LEN][LEN], vector<Ha
 		for (int j = harborStartIndex; j < deliveryStartIndex; j++) {
 
 			cerr << "generate " << i << " " << j-harborStartIndex << endl;
-			vector<int> action = getActions(buyPlace[i], harbors[j - harborStartIndex].berthCoord);
+			vector<int> action = getActions(buyPlace[i], harbors[j - harborStartIndex].boatCoord);
 			//for (int k = 0; k < action.size(); k++) {
 			//	cerr << action[k] << " ";
 			//}
@@ -77,14 +78,15 @@ void BoatPathPlanner::initBoatPathPlanner(const char my_map[LEN][LEN], vector<Ha
 	cerr << "for 1" << endl;
 	// 再搜港口到港口
 	for (int i = buyPlace.size(); i < buyPlace.size() + harbors.size(); i++) {
-		BFSSearch(my_map, harbors[i - buyPlace.size()].berthCoord);
+		BFSSearch(my_map, harbors[i - buyPlace.size()].boatCoord);
+		cerr << "ok";
 		for (int j = harborStartIndex; j < deliveryStartIndex; j++) {
 			if (i == j) {
 				continue;
 			}
 			cerr << "generate " << i << " " << j - harborStartIndex << endl;
 			int realIndex = j - harborStartIndex;
-			vector<int> action=getActions(harbors[i - buyPlace.size()].berthCoord, harbors[realIndex].berthCoord);
+			vector<int> action=getActions(harbors[i - buyPlace.size()].boatCoord, harbors[realIndex].boatCoord);
 			berth[i].edges.push_back(Edge(action,action.size(), realIndex));
 		}
 		refreshPath();
@@ -92,11 +94,11 @@ void BoatPathPlanner::initBoatPathPlanner(const char my_map[LEN][LEN], vector<Ha
 	cerr << "for 2" << endl;
 	// 最后搜港口到交货
 	for (int i = buyPlace.size(); i < buyPlace.size() + harbors.size(); i++) {
-		BFSSearch(my_map, harbors[i - buyPlace.size()].berthCoord);
+		BFSSearch(my_map, harbors[i - buyPlace.size()].boatCoord);
 		for (int j = deliveryStartIndex; j < berth.size(); j++) {
 			int realIndex = j - deliveryStartIndex;
 			cerr << "generate " << i << " " <<realIndex << endl;
-			vector<int> action = getActions(harbors[i - buyPlace.size()].berthCoord, harbors[realIndex].berthCoord);
+			vector<int> action = getActions(harbors[i - buyPlace.size()].boatCoord, harbors[realIndex].boatCoord);
 			berth[i].edges.push_back(Edge(action, action.size(), -realIndex));
 		}
 		refreshPath();
@@ -111,33 +113,46 @@ bool BoatPathPlanner::isAvailable(char type) {
 }
 
 void BoatPathPlanner::BFSSearch(const char my_map[LEN][LEN], Coord start) {
+	cerr << "start BFS" << endl;
+	cerr << start << endl;
 	queue<Coord> q;
 	q.push(start);
 	this->path[start.x][start.y] = 0;
+	int times = 0;
 	while (!q.empty()) {
 		Coord cur = q.front();
 		q.pop();
 		for (int i = 0; i < 4; i++) {
 			Coord next = cur + i;
+			if (next.x < 0 || next.x >= LEN || next.y < 0 || next.y >= LEN) {
+				continue;
+			}
+			//if (start.x != 49)
+			//	cerr << (isAvailable(my_map[next.x][next.y]) && path[next.x][next.y] == -1) << endl;
 			if (isAvailable(my_map[next.x][next.y]) && path[next.x][next.y] == -1) {
+				//if (start.x != 49)
+					//cerr << times++ << endl;
 				q.push(next);
 				path[next.x][next.y] = i;
 			}
 		}
+		
 	}
+	
+	cerr << "BFS done" << endl;
 	//FILE* fp = fopen("path.txt", "w");
 	//for (int i = 0; i < LEN; i++) {
 	//	for (int j = 0; j < LEN; j++) {
 	//		if (path[i][j] == -1)
 	//			fprintf(fp, "%c", my_map[i][j]);
 	//		else if (path[i][j] == 0)
-	//			fprintf(fp, "%s", "→");
+	//			fprintf(fp, "%s", "0");
 	//		else if (path[i][j]==1)
-	//			fprintf(fp,"%s","←");
+	//			fprintf(fp,"%s","1");
 	//		else if (path[i][j]==2)
-	//			fprintf(fp,"%s","↑");
+	//			fprintf(fp,"%s","2");
 	//		else if (path[i][j]==3)
-	//			fprintf(fp,"%s","↓");
+	//			fprintf(fp,"%s","3");
 	//
 	//	}
 	//	fprintf(fp, "\n");
@@ -164,6 +179,8 @@ vector<int> BoatPathPlanner::getActions(Coord start, Coord end) {
 	// 溯源。获取反向操作
 	while (cur != start) {
 		reversedAction.push_back(path[cur.x][cur.y]);
+		//cerr << cur << endl;
+		//cerr << path[cur.x][cur.y] << endl;
 		switch (path[cur.x][cur.y])
 		{
 		case 0:
