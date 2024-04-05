@@ -69,13 +69,16 @@ Scheduler::Scheduler() {
 }
 
 bool Scheduler::NextFrame() {
-	cerr<<"frame "<<frame<<endl;
+	
 	if (frame == 15000) {
 		printValue();
+		return false;
 	}
 	int money;
 	if (!scanf("%d %d", &this->frame, &money)) // 读掉第一行frame和money
 		return false;
+
+	cerr << "frame " << frame << endl;
 
 	int changeGoodsCount;
 	scanf("%d", &changeGoodsCount);
@@ -86,9 +89,9 @@ bool Scheduler::NextFrame() {
 			continue;
 		}
 		vector<int> distanceToHarbors=vector<int>(harborNum);
-		for (int j = 0; j < harborNum; j++)
+		for (int j = 0;j < harborNum; j++)
 		{
-			distanceToHarbors[i]=pathPlanner.getDistanceToHarbor(i,Coord(x,y)); 
+			distanceToHarbors[j]=pathPlanner.getDistanceToHarbor(j,Coord(x,y));
 		}
 		Product newProduct = Product(x, y, val, frame + 1000, distanceToHarbors);
 		products.push_back(newProduct);
