@@ -8,7 +8,6 @@ void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, P
 	path[startCoord.x][startCoord.y].distance = 0;
 	visited[startCoord.x][startCoord.y] = true;
 
-
 	while (!q.empty())
 	{
 		Coord p = q.front();
@@ -40,6 +39,8 @@ void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, P
 			}
 		}
 	}
+
+
 }
 
 
@@ -61,6 +62,7 @@ void PathPlanner::initHarborPath(const char my_map[LEN][LEN],vector<Coord> harbo
 	for (int i=0;i< harborNum;i++)
 	{
 		searchAllPath(my_map, harborCoords[i], harborsPaths[i]);
+
 	}
 }
 

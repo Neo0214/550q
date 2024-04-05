@@ -20,6 +20,7 @@ private:
     vector<Robot> robots;
     vector<Product> products;
     int harborNum; // 港口数量
+    vector<Coord> robotBuyPlace; // 购买机器人处
     vector<Coord> boatBuyPlace; // 购买船处
     vector<Delivery> boatDeliveryPlace; // 交货处
     int robotNum; // 机器人数量
