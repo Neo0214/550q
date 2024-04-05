@@ -19,7 +19,7 @@ Scheduler::Scheduler() {
 				this->boatBuyPlace.push_back(Coord(i, j + 1));
 				break;
 			case DELIVERY:
-				harbors.push_back(Harbor(sellPlace--, i, j, 0));
+				this->boatDeliveryPlace.push_back(Delivery(Coord(i,j),sellPlace--));
 				break;
 			}
 			
@@ -41,10 +41,6 @@ Scheduler::Scheduler() {
 
 
 	// 挪一下，把harbor挪到前半，-n交货港挪到后面
-	vector<Harbor> tmp=vector<Harbor>();
-	tmp.insert(tmp.end(), harbors.begin(), harbors.begin() + (-sellPlace) - 1);
-	harbors.erase(harbors.begin(), harbors.begin() + (-sellPlace) - 1);
-	harbors.insert(harbors.end(), tmp.begin(), tmp.end());
 	this->robots=vector<Robot>();
 	this->boats=vector<Boat>();
 	int Capacity = 0;
@@ -53,8 +49,10 @@ Scheduler::Scheduler() {
 
 	// 生成船运路线图
 	this->boatPathPlanner=BoatPathPlanner();
-	this->boatPathPlanner.initBoatPathPlanner(map.point, harbors, boatBuyPlace, harborNum);
-	cerr << "initBoatPath ok" << endl;
+
+	this->boatPathPlanner.initBoatPathPlanner(map.point, harbors, boatBuyPlace, boatDeliveryPlace);
+	cerr << "initBoatPath ok" << endl;	
+
 
 	// 结尾
 	char end[100];
@@ -71,6 +69,7 @@ Scheduler::Scheduler() {
 }
 
 bool Scheduler::NextFrame() {
+	cerr<<"frame "<<frame<<endl;
 	if (frame == 15000) {
 		printValue();
 	}
@@ -98,6 +97,7 @@ bool Scheduler::NextFrame() {
 		if (nearestHarborId != -1) // 产品有可达港口
 			harbors[nearestHarborId].appendProfitRate(newProduct.bestProfitRate);
 	}
+	cerr << "Goods over" << endl;
 	for (int i = startProductId; i < products.size(); i++)
 	{
 		if (products[i].expireTime <= frame)
@@ -118,6 +118,7 @@ bool Scheduler::NextFrame() {
 		scanf("%d %d %d %d", &id, &x, &y, &hasGoods);
 		robots[id].update(hasGoods, x, y);
 	}
+	cerr << "Robots over" << endl;
 	int harborCount;
 	scanf("%d", &harborCount);
 	for (int i = 0; i < harborCount; i++) {
@@ -125,7 +126,7 @@ bool Scheduler::NextFrame() {
 		scanf("%d %d %d %d %d %d", &id, &curCapacity, &x, &y, &direction, &status);
 		boats[id].update(status,curCapacity, x, y, direction);
 	}
-
+	cerr << "Harbors over" << endl;
 	char end[100];
 	scanf("%s", end); // 读掉结尾
 	

@@ -1,7 +1,6 @@
 #include "BoatPathPlanner.h"
 
 
-
 BoatPathPlanner::BoatPathPlanner() {
 	berth=vector<Node>();
 	path = new int*[LEN];
@@ -9,7 +8,6 @@ BoatPathPlanner::BoatPathPlanner() {
 		path[i] = new int[LEN];
 		memset(path[i], -1, sizeof(int)*LEN);
 	}
-	
 }
 
 void BoatPathPlanner::generateBerthCoord(vector<Harbor>& harbors, const char my_map[LEN][LEN]) {
@@ -38,19 +36,23 @@ void BoatPathPlanner::generateBerthCoord(vector<Harbor>& harbors, const char my_
 	}
 }
 
-void BoatPathPlanner::initBoatPathPlanner(const char my_map[LEN][LEN], vector<Harbor>& harbors, const vector<Coord>& buyPlace, const int harborNum) {
+void BoatPathPlanner::initBoatPathPlanner(const char my_map[LEN][LEN], vector<Harbor>& harbors, const vector<Coord>& buyPlace, const vector<Delivery>& deliveryPlace) {
 	// 初始化Node
-	
+	cerr << "into initBoatPathPlanner" << endl;
 	for (int i = 0; i < buyPlace.size(); i++) {
 		berth.push_back(Node(BUY_TYPE));
 	}
 	for (int i = 0; i < harbors.size(); i++) {
 		berth.push_back(Node(HARBOR_TYPE));
 	}
+	for (int i = 0; i < deliveryPlace.size(); i++) {
+		berth.push_back(Node(DELIVERY_TYPE));
+	}
 	int harborStartIndex= buyPlace.size();
-	int deliveryStartIndex= buyPlace.size() + harborNum;
+	int deliveryStartIndex= buyPlace.size() + harbors.size();
 	// 生成港口停靠目标坐标
 	generateBerthCoord(harbors, my_map);
+	cerr << "out generateBerthCoord" << endl;
 	// 寻路图有三个部分
 	// 购买-->港口
 	// 港口-->港口
@@ -61,19 +63,45 @@ void BoatPathPlanner::initBoatPathPlanner(const char my_map[LEN][LEN], vector<Ha
 		BFSSearch(my_map, buyPlace[i]);
 		// 此时已生成全图的方向溯源图
 		for (int j = harborStartIndex; j < deliveryStartIndex; j++) {
-			vector<int> action = getActions(buyPlace[i], harbors[j-buyPlace.size()].berthCoord);
-			berth[i].edges.push_back(Edge(action, action.size()));
+
+			cerr << "generate " << i << " " << j-harborStartIndex << endl;
+			vector<int> action = getActions(buyPlace[i], harbors[j - harborStartIndex].berthCoord);
+			//for (int k = 0; k < action.size(); k++) {
+			//	cerr << action[k] << " ";
+			//}
+			//cerr << endl;
+			berth[i].edges.push_back(Edge(action, action.size(),j-harborStartIndex));
 		}
 		refreshPath();
 	}
+	cerr << "for 1" << endl;
 	// 再搜港口到港口
 	for (int i = buyPlace.size(); i < buyPlace.size() + harbors.size(); i++) {
-
+		BFSSearch(my_map, harbors[i - buyPlace.size()].berthCoord);
+		for (int j = harborStartIndex; j < deliveryStartIndex; j++) {
+			if (i == j) {
+				continue;
+			}
+			cerr << "generate " << i << " " << j - harborStartIndex << endl;
+			int realIndex = j - harborStartIndex;
+			vector<int> action=getActions(harbors[i - buyPlace.size()].berthCoord, harbors[realIndex].berthCoord);
+			berth[i].edges.push_back(Edge(action,action.size(), realIndex));
+		}
+		refreshPath();
 	}
+	cerr << "for 2" << endl;
 	// 最后搜港口到交货
-	for (int i = buyPlace.size() + harbors.size(); i < berth.size(); i++) {
-
+	for (int i = buyPlace.size(); i < buyPlace.size() + harbors.size(); i++) {
+		BFSSearch(my_map, harbors[i - buyPlace.size()].berthCoord);
+		for (int j = deliveryStartIndex; j < berth.size(); j++) {
+			int realIndex = j - deliveryStartIndex;
+			cerr << "generate " << i << " " <<realIndex << endl;
+			vector<int> action = getActions(harbors[i - buyPlace.size()].berthCoord, harbors[realIndex].berthCoord);
+			berth[i].edges.push_back(Edge(action, action.size(), -realIndex));
+		}
+		refreshPath();
 	}
+	cerr << "for 3" << endl;
 }
 
 bool BoatPathPlanner::isAvailable(char type) {
@@ -85,10 +113,7 @@ bool BoatPathPlanner::isAvailable(char type) {
 void BoatPathPlanner::BFSSearch(const char my_map[LEN][LEN], Coord start) {
 	queue<Coord> q;
 	q.push(start);
-	cerr << path[101][26]<< endl;
-
 	this->path[start.x][start.y] = 0;
-	cerr << path[101][26] << endl;
 	while (!q.empty()) {
 		Coord cur = q.front();
 		q.pop();
@@ -165,6 +190,57 @@ vector<int> BoatPathPlanner::getActions(Coord start, Coord end) {
 	}
 	// 考虑旋转和主干道操作延迟，生成最终操作序列
 	vector<int> actions;
-
+	int preAct = 0; // 初始状态向右
+	for (int i = 0; i < forwardActions.size(); i++) {
+		int act = forwardActions[i];
+		switch (getChangingStatus(preAct, act)) {
+		case 0:
+			actions.push_back(FORWARD);
+			break;
+		// 有转动时，先插入旋转操作，再加入前进 
+		case 1:
+			actions.push_back(LEFTTURN);
+			actions.push_back(FORWARD);
+			break;
+		case 2:
+			actions.push_back(LEFTTURN);
+			actions.push_back(LEFTTURN);
+			actions.push_back(LEFTTURN);
+			actions.push_back(FORWARD);
+			break;
+		}
+		preAct = act;
+	}
 	return actions;
+}
+
+int BoatPathPlanner::getChangingStatus(int preAct, int act) {
+	if (preAct == act)
+		return 0;
+	if (preAct <= 1) {
+		switch ((preAct+act)%2)
+		{
+		case 0:
+			return 1;
+			break;
+		case 1:
+			return 2;
+			break;
+		default:
+			break;
+		}
+	}
+	else {
+		switch ((preAct + act) % 2) {
+		case 1:
+			return 1;
+			break;
+		case 0:
+			return 2;
+			break;
+		default:
+			break;
+		}
+	}
+	return 0;
 }
