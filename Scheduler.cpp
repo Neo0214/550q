@@ -16,7 +16,7 @@ Scheduler::Scheduler() {
 			switch (line[j])
 			{
 			case BUY_SHIP_SPACE:
-				this->boatBuyPlace.push_back(Coord(i, j));
+				this->boatBuyPlace.push_back(Coord(i, j + 1));
 				break;
 			case DELIVERY:
 				harbors.push_back(Harbor(sellPlace--, i, j, 0));
@@ -45,7 +45,7 @@ Scheduler::Scheduler() {
 
 	// 生成船运路线图
 	this->boatPathPlanner=BoatPathPlanner();
-	this->boatPathPlanner.initBoatPathPlanner(map.point, harbors, boatBuyPlace, boatDeliveryPlace);
+	this->boatPathPlanner.initBoatPathPlanner(map.point, harbors, boatBuyPlace, harborNum);
 
 	// 结尾
 	char end[100];

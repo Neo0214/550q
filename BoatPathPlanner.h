@@ -32,7 +32,7 @@ private:
 	int** path; // 临时存储方向溯源图
 public:
 	BoatPathPlanner();
-	void initBoatPathPlanner(const char my_map[LEN][LEN], vector<Harbor>& harbors, const vector<Coord>& buyPlace, const vector<Coord>& deliveryPlace);
+	void initBoatPathPlanner(const char my_map[LEN][LEN], vector<Harbor>& harbors, const vector<Coord>& buyPlace, const int harborNum);
 	void generateBerthCoord(vector<Harbor>& harbors, const char my_map[LEN][LEN]);
 	void BFSSearch(const char my_map[LEN][LEN], Coord start);
 	void refreshPath();
