@@ -1,7 +1,7 @@
 #pragma once
 #include "defines.h"
 #include "Order.h"
-
+#include "Coord.h"
 #define MOVING 0
 #define NORMAL 1
 #define WAITING 2
@@ -14,7 +14,8 @@ private:
     int capacity;
     // 动态数据
     int status;
-    int pos;
+    Coord pos;
+    int direction;
     int curCapacity;
     int curValue;
     int preLoadNum;
@@ -27,7 +28,7 @@ public:
     Boat(int _id, int _capacity);
     Boat();
     // 公共函数
-    void update(int status, int pos);
+    void update(int status, int curCapacity, int x, int y, int direction);
     void gotoHarbor(int harborId);
     void comeBack(int frame);
     int getStatus();

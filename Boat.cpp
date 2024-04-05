@@ -5,26 +5,29 @@ Boat::Boat(int _id, int _capacity)
 	id = _id;
 	capacity = _capacity;
 	status = NORMAL;
-	pos = -1;
+	pos = Coord(-1,-1);
 	curCapacity = 0;
 	preLoadNum = 0;
 	curValue = 0;
 	orders=vector<Order>();
 	turns = 0;
+	direction=0;
 }
 Boat::Boat() {
 
 }
 
-void Boat::update(int status, int pos) {
+void Boat::update(int status,int curCapacity,int x,int y,int direction) {
 	this->status = status;
-	this->pos = pos;
+	this->curCapacity = curCapacity;
+	this->pos= Coord(x,y);
+	this->direction = direction;
 }
 
 void Boat::gotoHarbor(int harborId) {
 	printf("ship %d %d\n", id, harborId);
 	//cerr << "boat " << id << " goto " << harborId << " with cap " << curCapacity << endl;
-	this->pos= harborId;
+	//this->pos= harborId;
 	this->status= MOVING;
 	
 }
@@ -32,7 +35,7 @@ void Boat::gotoHarbor(int harborId) {
 void Boat::comeBack(int frame) {
 	printf("go %d\n", id);
 	cerr << "boat " << id << " come back with cap " << this->curCapacity << endl;
-	this->pos = -1;
+	//this->pos = -1;
 	this->status = MOVING;
 	this->curCapacity = 0;
 	this->curValue = 0;
@@ -44,7 +47,7 @@ int Boat::getStatus() {
 }
 
 int Boat::getPos() {
-	return pos;
+	return 0;
 }
 
 int Boat::getCurCapacity() {

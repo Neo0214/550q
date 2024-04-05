@@ -7,17 +7,24 @@
 #include "Product.h"
 #include "PathPlanner.h"
 #include "args.h"
+#include "BoatPathPlanner.h"
+#include "Coord.h"
+#include "Delivery.h"
 
 class Scheduler {
 private:
     // 固定数据
     Map map;
-    Harbor harbor[10];
-    Boat boat[5];
-    Robot robot[10];
+    vector<Harbor> harbors;
+    vector<Boat> boats;
+    vector<Robot> robots;
     vector<Product> products;
-    
+    int harborNum; // 港口数量
+    vector<Coord> boatBuyPlace; // 购买船处
+    vector<Delivery> boatDeliveryPlace; // 交货处
+    int robotNum; // 机器人数量
     PathPlanner pathPlanner; // 路径规划器
+    BoatPathPlanner boatPathPlanner; // 船的路径规划器
 
     int boatCapacity; // 船的容量
     int minBackTime; // 最小回港时间

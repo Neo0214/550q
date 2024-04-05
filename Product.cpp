@@ -1,16 +1,16 @@
 #include "Product.h"
 
-Product::Product(int x, int y, int price, int expireTime, int distanceToHarbors[HARBOR_NUM])
+Product::Product(int x, int y, int price, int expireTime, const vector<int>& distanceToHarbors)
 {
 	this->x = x;
 	this->y = y;
 	this->expireTime = expireTime;
 	this->price = price;
-	memcpy(this->distanceToHarbors, distanceToHarbors, sizeof(int) * HARBOR_NUM);
+	this->distanceToHarbors = distanceToHarbors;
 
 	int minDistance = INT_MAX;
 	int minDistanceId = -1;
-	for (int i = 0; i < HARBOR_NUM; i++)
+	for (int i = 0; i < distanceToHarbors.size(); i++)
 	{
 		if (distanceToHarbors[i] == -1)
 			continue;
