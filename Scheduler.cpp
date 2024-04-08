@@ -50,7 +50,6 @@ Scheduler::Scheduler() {
 	pathPlanner.initHarborPath(map.point, harborsCoord);
 
 
-
 	this->robots = vector<Robot>();
 	this->boats = vector<Boat>();
 	int Capacity = 0;
@@ -60,7 +59,6 @@ Scheduler::Scheduler() {
 	// 生成船运路线图
 	this->boatPathPlanner = BoatPathPlanner(harborNum, boatDeliveryPlace.size());
 	this->boatPathPlanner.init(map.point, harbors, boatDeliveryPlace);
-
 
 
 
@@ -227,10 +225,9 @@ void Scheduler::findProductAndHarbor(int robotId)
 
 
 void Scheduler::Update() {
-	if (frame == 1)
+	if (frame < 10)
 	{
 		buyRobot(0);
-
 	}
 	// 此处做决策，并输出指令
 	for (int i = 0; i < robotNum; i++)
@@ -249,6 +246,7 @@ void Scheduler::Update() {
 	//发出指令控制机器人移动
 	// 碰撞图初始化
 	int collisionMap[LEN][LEN] = { 0 };
+	int safeMap[LEN][LEN] = { 0 };
 	for (int i = 0; i < LEN; i++)
 	{
 		for (int j = 0; j < LEN; j++)
@@ -257,6 +255,10 @@ void Scheduler::Update() {
 				collisionMap[i][j] = 0;
 			else
 				collisionMap[i][j] = -1;
+			if (isSafePath(map.point[i][j]))
+				safeMap[i][j] = 0;
+			else
+				safeMap[i][j] = -1;
 		}
 	}
 	for (int i = 0; i < robotNum; i++)
@@ -278,7 +280,7 @@ void Scheduler::Update() {
 		pair<int, int> curRobot = restRobots.top();
 		restRobots.pop();
 
-		pair<int, vector<int>> moveAndCollision = robots[curRobot.first].moveOneStep(collisionMap);
+		pair<int, vector<int>> moveAndCollision = robots[curRobot.first].moveOneStep(collisionMap,safeMap);
 		if (countToughTask <= 10)
 			while (moveAndCollision.second.size())
 			{
@@ -527,7 +529,7 @@ void Scheduler::buyBoat(int buyIndex)
 void Scheduler::buyRobot(int buyIndex)
 {
 	printf("lbot %d %d\n", robotBuyPlace[buyIndex].x, robotBuyPlace[buyIndex].y);
-	robots.push_back(Robot(buyIndex, robotBuyPlace[buyIndex].x, robotBuyPlace[buyIndex].y));
+	robots.push_back(Robot(robotNum, robotBuyPlace[buyIndex].x, robotBuyPlace[buyIndex].y));
 }
 
 void Scheduler::setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN])

@@ -27,7 +27,7 @@ void Robot::assignTask(const vector<int>& moves, int target, int atHarbor, int g
 	this->goalHarbor = goalHarbor;
 }
 
-pair<int,vector<int>> Robot::moveOneStep(int collisionMap[LEN][LEN])
+pair<int,vector<int>> Robot::moveOneStep(int collisionMap[LEN][LEN], int safeMap[LEN][LEN])
 {
 	vector<int> collisions;
 	//cerr << id << "find" << endl;
@@ -65,7 +65,8 @@ pair<int,vector<int>> Robot::moveOneStep(int collisionMap[LEN][LEN])
 		if (collisionMap[x][y] >> 16 == 0)
 		{ // 可以停止
 			//collisionMap[x][y] |= (id + 1) << 16; // 锁定位置
-			collisionMap[x][y] = (collisionMap[x][y] & 0xFFFF) | ((id + 1) << 16);
+			collisionMap[x][y] = (collisionMap[x][y] & 0xFFFF) | ((id + 1) << 16)
+				& safeMap[x][y];
 			return make_pair(-1, collisions);
 		}
 		else
@@ -95,7 +96,8 @@ pair<int,vector<int>> Robot::moveOneStep(int collisionMap[LEN][LEN])
 					)
 				{
 					// collisionMap[avoidPos.x][avoidPos.y] |= (id + 1) << 16; // 锁定位置
-					collisionMap[avoidPos.x][avoidPos.y] = (collisionMap[avoidPos.x][avoidPos.y] & 0xFFFF) | ((id + 1) << 16);
+					collisionMap[avoidPos.x][avoidPos.y] = (collisionMap[avoidPos.x][avoidPos.y] & 0xFFFF) | ((id + 1) << 16)
+						& (safeMap[avoidPos.x][avoidPos.y] | safeMap[x][y]);
 					return make_pair(i, collisions); // 这里直接return了，如果不直接return需要break
 				}
 			}
@@ -115,7 +117,8 @@ pair<int,vector<int>> Robot::moveOneStep(int collisionMap[LEN][LEN])
 					collisions.push_back((collisionMap[x][y] >> 16) - 1);
 				}
 				//collisionMap[expectedPos.x][expectedPos.y] |= (id + 1) << 16; // 锁定位置
-				collisionMap[expectedPos.x][expectedPos.y] = (collisionMap[expectedPos.x][expectedPos.y] & 0xFFFF) | ((id + 1) << 16);
+				collisionMap[expectedPos.x][expectedPos.y] = (collisionMap[expectedPos.x][expectedPos.y] & 0xFFFF) | ((id + 1) << 16)
+					& (safeMap[expectedPos.x][expectedPos.y] | safeMap[x][y]);
 				return make_pair(expectedMove, collisions);
 			}
 		}
@@ -124,7 +127,8 @@ pair<int,vector<int>> Robot::moveOneStep(int collisionMap[LEN][LEN])
 	{
 		// 锁定该位置，把高16位设置为这个机器人id+1
 		//collisionMap[expectedPos.x][expectedPos.y] |= (id + 1) << 16; // 锁定位置
-		collisionMap[expectedPos.x][expectedPos.y] = (collisionMap[expectedPos.x][expectedPos.y] & 0xFFFF) | ((id + 1) << 16);
+		collisionMap[expectedPos.x][expectedPos.y] = (collisionMap[expectedPos.x][expectedPos.y] & 0xFFFF) | ((id + 1) << 16)
+			& (safeMap[expectedPos.x][expectedPos.y] | safeMap[x][y]);
 		return make_pair(expectedMove, collisions);
 	}
 

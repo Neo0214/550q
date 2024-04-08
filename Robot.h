@@ -30,7 +30,7 @@ public:
 	// ¹«¹²º¯Êý
 	void update(int hasGoods, int x, int y);
 	void assignTask(const vector<int>& moves, int target, int atHarbor, int goalHarbor);
-	pair<int, vector<int>> moveOneStep(int collisionMap[LEN][LEN]);
+	pair<int, vector<int>> moveOneStep(int collisionMap[LEN][LEN], int safeMap[LEN][LEN]);
 	void redoOneStep(int collisionMap[LEN][LEN],int originMove);
 	int command(int realMove);
 	Coord getNextPos();
