@@ -49,7 +49,6 @@ Scheduler::Scheduler() {
 
 	pathPlanner.initHarborPath(map.point, harborsCoord);
 
-	cerr << "init ok" << endl;
 
 	this->robots = vector<Robot>();
 	this->boats = vector<Boat>();
@@ -58,15 +57,11 @@ Scheduler::Scheduler() {
 	this->boatCapacity = Capacity;
 
 	// 生成船运路线图
-	cerr << "init ok" << endl;
 	this->boatPathPlanner = BoatPathPlanner(harborNum, boatDeliveryPlace.size());
-	cerr << "init ok" << endl;
 	this->boatPathPlanner.init(map.point, harbors, boatDeliveryPlace);
-	cerr << "init ok" << endl;
 
 
 
-	cerr << "init ok" << endl;
 	// 结尾
 	char end[100];
 	scanf("%s", end);
@@ -230,12 +225,9 @@ void Scheduler::findProductAndHarbor(int robotId)
 
 
 void Scheduler::Update() {
-	if (frame == 1)
+	if (frame < 10)
 	{
-		for (int i = 0; i < 5; i++)
-		{
-			buyRobot(0);
-		}
+		buyRobot(0);
 	}
 	// 此处做决策，并输出指令
 	for (int i = 0; i < robotNum; i++)

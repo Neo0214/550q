@@ -32,17 +32,14 @@ void BoatPathPlanner::init(char map[LEN][LEN], vector<Harbor>& harbors, vector<D
 			this->map[i][j] = new Node[LEN];
 		}
 	}
-	cerr << "init ok1" << endl;
 	for (int i = 0; i < harborNum; i++) {
 		// 对每个港口生成前往路径地图
 		BFSearch(this->map[i], map, harbors[i].berthCoord);
 	}
-	cerr << "init ok1" << endl;
 	for (int i = harborNum; i < harborNum + sellPlaceNum; i++) {
 		// 对每个售卖点生成前往路径地图
 		BFSearch(this->map[i], map, deliveries[i - harborNum].getPos());
 	}
-	cerr << "init ok1" << endl;
 }
 void BoatPathPlanner::BFSearch(Node** pathMap, char map[LEN][LEN], Coord begin)
 {
