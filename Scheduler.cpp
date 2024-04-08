@@ -400,7 +400,11 @@ void Scheduler::Update() {
 		}
 		else if (boats[i].status != LOADING) {
 			// 有目标的船 且 在前往路上的船
-			boats[i].act(boatPathPlanner.nextMove(boats[i].pos, boats[i].direction, boats[i].target));
+			if (atTarget(boats[i].pos, boats[i].target)) {
+				boats[i].act(DRIVEIN);
+			}
+			else
+				boats[i].act(boatPathPlanner.nextMove(boats[i].pos, boats[i].direction, boats[i].target));
 		}
 	}
 
@@ -581,4 +585,20 @@ void Scheduler::setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN])
 		}
 	}
 
+}
+
+
+bool Scheduler::atTarget(Coord pos, int targetId)
+{
+	Coord targetPos;
+	if (targetId > harborNum) {
+		targetPos = boatDeliveryPlace[targetId - harborNum].getPos();
+	}
+	else {
+		targetPos = harbors[targetId].berthCoord;
+	}
+	if (pos == targetPos) {
+		return true;
+	}
+	return false;
 }

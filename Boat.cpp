@@ -86,7 +86,18 @@ int Boat::getOrderCapacity() {
 
 void Boat::act(int act)
 {
-
+	if (act == FORWARD) {
+		forward();
+	}
+	else if (act == DRIVEIN) {
+		driveIn();
+	}
+	else if (act == LEAVE) {
+		leave();
+	}
+	else {
+		rot(act);
+	}
 }
 void Boat::leave()
 {
