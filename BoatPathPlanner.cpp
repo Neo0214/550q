@@ -35,6 +35,23 @@ void BoatPathPlanner::init(char map[LEN][LEN], vector<Harbor>& harbors, vector<D
 	for (int i = 0; i < harborNum; i++) {
 		// 对每个港口生成前往路径地图
 		BFSearch(this->map[i], map, harbors[i].berthCoord);
+		//if (i == 1) {
+		//	Node** pathMap = this->map[i];
+		//	//写到文件
+		//	ofstream out("pathMap.txt");
+		//	for (int i = 0; i < LEN; i++) {
+		//		for (int j = 0; j < LEN; j++) {
+		//			if (pathMap[i][j].distance == -1)
+		//				out << 'x';
+		//			else
+		//				out << char('0' + pathMap[i][j].direct);
+		//		}
+		//		out << endl;
+		//	}
+		//	out.close();
+		//	exit(0);
+		//}
+
 	}
 	for (int i = harborNum; i < harborNum + sellPlaceNum; i++) {
 		// 对每个售卖点生成前往路径地图
@@ -66,19 +83,7 @@ void BoatPathPlanner::BFSearch(Node** pathMap, char map[LEN][LEN], Coord begin)
 		}
 
 	}
-	//写到文件
-	//ofstream out("pathMap.txt");
-	//for (int i = 0; i < LEN; i++) {
-	//	for (int j = 0; j < LEN; j++) {
-	//		if (pathMap[i][j].distance == -1)
-	//			out << 'x';
-	//		else
-	//			out << char('0' + pathMap[i][j].direct);
-	//	}
-	//	out << endl;
-	//}
-	//out.close();
-	//exit(0);
+
 
 }
 
@@ -145,42 +150,43 @@ int BoatPathPlanner::nextMove(Coord curPos, int curDirect, int mapId)
 	switch (curDirect) {
 	case 0:
 		// 当前朝右
-		if (/*curDirect != pathMap[curPos.x][curPos.y].direct && */ pathMap[curPos.x + 1][curPos.y + 1].distance <= curDirect && pathMap[curPos.x + 1][curPos.y + 1].direct == 2) {
+		if (pathMap[curPos.x][curPos.y].direct == 2) {
 			return LEFTTURN;
 		}
-		if (/*curDirect != pathMap[curPos.x][curPos.y].direct &&*/ pathMap[curPos.x][curPos.y + 2].distance <= curDirect && pathMap[curPos.x][curPos.y + 2].direct == 3) {
+		else if (pathMap[curPos.x + 1][curPos.y + 1].direct == 3 && pathMap[curPos.x + 1][curPos.y + 1].distance <= curDistance) {
 			return RIGHTTURN;
 		}
 		break;
 	case 1:
 		// 当前朝左
-		if (/*curDirect != pathMap[curPos.x][curPos.y].direct &&*/pathMap[curPos.x - 1][curPos.y - 1].distance <= curDirect && pathMap[curPos.x - 1][curPos.y - 1].direct == 3) {
+		if (pathMap[curPos.x][curPos.y].direct == 3) {
 			return LEFTTURN;
 		}
-		if (/*curDirect != pathMap[curPos.x][curPos.y].direct && */pathMap[curPos.x][curPos.y - 2].distance <= curDirect && pathMap[curPos.x][curPos.y - 2].direct == 2) {
+		else if (pathMap[curPos.x - 1][curPos.y - 1].direct == 2 && pathMap[curPos.x - 1][curPos.y - 1].distance <= curDistance) {
 			return RIGHTTURN;
 		}
 		break;
 	case 2:
 		// 当前朝上
-		if (/*curDirect != pathMap[curPos.x][curPos.y].direct &&*/ pathMap[curPos.x - 1][curPos.y + 1].distance <= curDirect && pathMap[curPos.x - 1][curPos.y + 1].direct == 1) {
+		if (pathMap[curPos.x][curPos.y].direct == 1) {
 			return LEFTTURN;
 		}
-		if (/*curDirect != pathMap[curPos.x][curPos.y].direct &&*/ pathMap[curPos.x - 2][curPos.y].distance <= curDirect && pathMap[curPos.x - 2][curPos.y].direct == 0) {
+		else if (pathMap[curPos.x - 1][curPos.y + 1].direct == 0 && pathMap[curPos.x - 1][curPos.y + 1].distance <= curDistance) {
 			return RIGHTTURN;
 		}
 		break;
 	case 3:
 		// 当前朝下
-		if (/*curDirect != pathMap[curPos.x][curPos.y].direct && */pathMap[curPos.x + 1][curPos.y - 1].distance <= curDirect && pathMap[curPos.x + 1][curPos.y - 1].direct == 0) {
+		if (pathMap[curPos.x][curPos.y].direct == 0) {
 			return LEFTTURN;
 		}
-		if (/*curDirect != pathMap[curPos.x][curPos.y].direct && */pathMap[curPos.x + 2][curPos.y].distance <= curDirect && pathMap[curPos.x + 2][curPos.y].direct == 1) {
+		else if (pathMap[curPos.x + 1][curPos.y - 1].direct == 1 && pathMap[curPos.x + 1][curPos.y - 1].distance <= curDistance) {
 			return RIGHTTURN;
 		}
 		break;
 
 	}
-
-	return FORWARD;
+	if (curDirect == pathMap[curPos.x][curPos.y].direct)
+		return FORWARD;
+	return -1;
 }

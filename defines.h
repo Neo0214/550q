@@ -30,8 +30,8 @@
 #define DELIVERY 'T'
 
 #define FORWARD 0
-#define LEFTTURN 1
-#define RIGHTTURN 2
+#define LEFTTURN 2
+#define RIGHTTURN 1
 #define DRIVEIN 3
 #define LEAVE 4
 

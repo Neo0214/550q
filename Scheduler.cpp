@@ -375,26 +375,36 @@ void Scheduler::Update() {
 	}
 
 	for (int i = 0; i < boatNum; i++) {
+		cerr << frame << ":" << boats[i].status;
 		if (boats[i].isFree()) {
 			// 没有目标的空闲船
+			cerr << "free" << endl;
 			if (boats[i].curCapacity == boatCapacity) {
 				// 已满，去交货
-				boats[i].target = boatPathPlanner.findBestSellPlace(boats[i].pos);
-				boats[i].act(boatPathPlanner.nextMove(boats[i].pos, boats[i].direction, boats[i].target));
+				boats[i].target = boatPathPlanner.findBestSellPlace(boats[i].key);
+				boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target));
 			}
 			else {
 				// 未满，去港口装货
-				boats[i].target = findBestHarbor(boats[i].pos);
-				boats[i].act(boatPathPlanner.nextMove(boats[i].pos, boats[i].direction, boats[i].target));
+				boats[i].target = findBestHarbor(boats[i].key);
+				boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target));
 			}
 		}
 		else if (boats[i].status != LOADING) {
+			cerr << "moving" << endl;
 			// 有目标的船 且 在前往路上的船
-			if (atTarget(boats[i].pos, boats[i].target)) {
+			if (atTarget(boats[i].key, boats[i].target)) {
 				boats[i].act(DRIVEIN);
 			}
-			else
-				boats[i].act(boatPathPlanner.nextMove(boats[i].pos, boats[i].direction, boats[i].target));
+			else {
+				boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target));
+			}
+		}
+		else if (boats[i].status == LOADING && harbors[boats[i].target].productPrices.size() == 0) {
+			// 已经没货了
+			cerr << "changing" << endl;
+			boats[i].act(LEAVE);
+			boats[i].target = 1;
 		}
 	}
 
@@ -552,22 +562,22 @@ void Scheduler::setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN])
 					// 横着
 					if (point.x + i - 1 >= 0 && my_map[point.x + i - 2 - 1][point.y + j - 2] == LOAD_SPACE) {
 						// 上覆盖
-						curHarbor.berthCoord = Coord(point.x + i - 2 - 2, point.y + j + 1 - 2);
+						curHarbor.berthCoord = Coord(point.x + i - 2 - 2 + 1, point.y + j + 1 - 2);
 					}
 					else {
 						// 下覆盖
-						curHarbor.berthCoord = Coord(point.x + i + 3 - 2, point.y + j + 1 - 2);
+						curHarbor.berthCoord = Coord(point.x + i + 3 - 2 - 1, point.y + j + 1 - 2);
 					}
 				}
 				else {
 					// 竖着
 					if (point.y + j - 1 >= 0 && my_map[point.x + i - 2][point.y + j - 1 - 2] == LOAD_SPACE) {
 						// 左覆盖
-						curHarbor.berthCoord = Coord(point.x + i + 1 - 2, point.y + j - 2 - 2);
+						curHarbor.berthCoord = Coord(point.x + i + 1 - 2, point.y + j - 2 - 2 + 1);
 					}
 					else {
 						// 右覆盖
-						curHarbor.berthCoord = Coord(point.x + i + 1 - 2, point.y + j + 3 - 2);
+						curHarbor.berthCoord = Coord(point.x + i + 1 - 2, point.y + j + 3 - 2 - 1);
 					}
 				}
 				return;
