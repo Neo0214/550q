@@ -48,6 +48,7 @@ private:
 	bool boatAtBuy(int boatId);
 	void setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN]);
 	int findBestHarbor(const Coord& pos);
+	bool atTarget(Coord pos, int targetId);
 public:
 	Scheduler();
 

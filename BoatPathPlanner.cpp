@@ -52,26 +52,28 @@ void BoatPathPlanner::BFSearch(Node** pathMap, char map[LEN][LEN], Coord begin)
 		q.pop();
 		for (int i = 0; i < 4; i++) {
 			Coord next = cur + i;
+			if (next.x < 0 || next.y < 0 || next.x >= LEN || next.y >= LEN) {
+				continue;
+			}
 			if (pathMap[next.x][next.y].direct == -1 && isBoatPath(map[next.x][next.y])) {
 				// 已过基础判断，还需要验证方向下船体是否都可以用
 				if (wholeBoatAvailable(map, next, reverseMove[i])) {
 					// 全部条件通过
 					pathMap[next.x][next.y].set(reverseMove[i], distance + 1);
-
 					q.push(next);
 				}
 			}
 		}
 
 	}
-	// 写到文件
+	//写到文件
 	//ofstream out("pathMap.txt");
 	//for (int i = 0; i < LEN; i++) {
 	//	for (int j = 0; j < LEN; j++) {
 	//		if (pathMap[i][j].distance == -1)
 	//			out << 'x';
 	//		else
-	//			out << pathMap[i][j].distance;
+	//			out << char('0' + pathMap[i][j].direct);
 	//	}
 	//	out << endl;
 	//}
@@ -137,5 +139,48 @@ int BoatPathPlanner::findBestSellPlace(Coord cur)
 int BoatPathPlanner::nextMove(Coord curPos, int curDirect, int mapId)
 {
 	Node** pathMap = this->map[mapId]; // 调出地图
-	return 0;
+	int curDistance = pathMap[curPos.x][curPos.y].distance;
+
+
+	switch (curDirect) {
+	case 0:
+		// 当前朝右
+		if (/*curDirect != pathMap[curPos.x][curPos.y].direct && */ pathMap[curPos.x + 1][curPos.y + 1].distance <= curDirect && pathMap[curPos.x + 1][curPos.y + 1].direct == 2) {
+			return LEFTTURN;
+		}
+		if (/*curDirect != pathMap[curPos.x][curPos.y].direct &&*/ pathMap[curPos.x][curPos.y + 2].distance <= curDirect && pathMap[curPos.x][curPos.y + 2].direct == 3) {
+			return RIGHTTURN;
+		}
+		break;
+	case 1:
+		// 当前朝左
+		if (/*curDirect != pathMap[curPos.x][curPos.y].direct &&*/pathMap[curPos.x - 1][curPos.y - 1].distance <= curDirect && pathMap[curPos.x - 1][curPos.y - 1].direct == 3) {
+			return LEFTTURN;
+		}
+		if (/*curDirect != pathMap[curPos.x][curPos.y].direct && */pathMap[curPos.x][curPos.y - 2].distance <= curDirect && pathMap[curPos.x][curPos.y - 2].direct == 2) {
+			return RIGHTTURN;
+		}
+		break;
+	case 2:
+		// 当前朝上
+		if (/*curDirect != pathMap[curPos.x][curPos.y].direct &&*/ pathMap[curPos.x - 1][curPos.y + 1].distance <= curDirect && pathMap[curPos.x - 1][curPos.y + 1].direct == 1) {
+			return LEFTTURN;
+		}
+		if (/*curDirect != pathMap[curPos.x][curPos.y].direct &&*/ pathMap[curPos.x - 2][curPos.y].distance <= curDirect && pathMap[curPos.x - 2][curPos.y].direct == 0) {
+			return RIGHTTURN;
+		}
+		break;
+	case 3:
+		// 当前朝下
+		if (/*curDirect != pathMap[curPos.x][curPos.y].direct && */pathMap[curPos.x + 1][curPos.y - 1].distance <= curDirect && pathMap[curPos.x + 1][curPos.y - 1].direct == 0) {
+			return LEFTTURN;
+		}
+		if (/*curDirect != pathMap[curPos.x][curPos.y].direct && */pathMap[curPos.x + 2][curPos.y].distance <= curDirect && pathMap[curPos.x + 2][curPos.y].direct == 1) {
+			return RIGHTTURN;
+		}
+		break;
+
+	}
+
+	return FORWARD;
 }
