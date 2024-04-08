@@ -44,3 +44,4 @@ constexpr int reverseMove[4] = { 1,0,3,2 }; // 移动方向反转数组
 	|| point==BUY_SHIP_SPACE || point==HARBOR_SPACE || point==LOAD_SPACE || point==OVERPASS || point==OVERPASS_MAIN \
 	|| point==DELIVERY)
 
+#define isSafePath(point) (point == MAIN_LAND || point == BUY_ROBOT_SPACE || point == BUY_SHIP_SPACE || point == OVERPASS_MAIN)
