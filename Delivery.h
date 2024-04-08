@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "defines.h"
 #include "Coord.h"
 
@@ -9,5 +9,6 @@ private:
 
 public:
 	Delivery();
-	Delivery(Coord _pos,int _id);
+	Delivery(Coord _pos, int _id);
+	Coord getPos();
 };

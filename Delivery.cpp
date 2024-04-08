@@ -1,7 +1,11 @@
-#include "Delivery.h"
+﻿#include "Delivery.h"
 
 
 Delivery::Delivery(Coord _pos, int _id) {
-	this->pos=Coord(_pos.x,_pos.y);
+	this->pos = Coord(_pos.x, _pos.y);
 	this->id = _id;
+}
+
+Coord Delivery::getPos() {
+	return this->pos;
 }
