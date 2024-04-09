@@ -28,9 +28,10 @@ public:
 	~BoatPathPlanner();
 	void init(char map[LEN][LEN], vector<Harbor>& harbors, vector<Delivery>& deliveries);
 	void BFSearch(Node** pathMap, char map[LEN][LEN], Coord begin);
-	bool wholeBoatAvailable(char map[LEN][LEN], Coord& checkPos, int direct);
-	void debug() { cerr << map[0] << endl; }
+	int wholeBoatAvailable(char map[LEN][LEN], Coord& checkPos, int direct);
 	void clean();
 	int findBestSellPlace(Coord cur); // 返回最近的售卖点
-	int nextMove(Coord curPos, int curDirect, int mapId);
+	int nextMove(Coord curPos, int curDirect, int mapId, char originMap[LEN][LEN]);
+	int getDistance(Coord curPos, int mapId);
+	bool canForward(int curDirect, Coord curPos, char originMap[LEN][LEN]);
 };

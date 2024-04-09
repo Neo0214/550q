@@ -5,7 +5,7 @@ Harbor::Harbor(int Id, int x, int y, int velocity)
 	this->Id = Id;
 	this->boatCoord = Coord(x, y);
 	this->velocity = velocity;
-
+	this->orders = vector<Order>();
 
 }
 Harbor::Harbor() {
@@ -104,6 +104,7 @@ void Harbor::removeProfitRate(double profitRate)
 }
 
 void Harbor::clearOneOrder() {
+	//cerr << "size" << orders.size() << endl;
 	this->orders.erase(this->orders.begin(), this->orders.begin() + 1);
 	//this->endingCost+=0.5;
 }

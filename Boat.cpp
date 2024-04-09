@@ -4,7 +4,7 @@ Boat::Boat(int _id, int _capacity)
 {
 	id = _id;
 	capacity = _capacity;
-	status = RECOVER;
+	status = MOVING;
 	pos = Coord(-1, -1);
 	curCapacity = 0;
 	preLoadNum = 0;
@@ -17,12 +17,14 @@ Boat::Boat(int _id, int _capacity)
 	prePos = Coord(-1, -1);
 	force = true;
 	target = -1;
+	preTarget = -1;
 }
 Boat::Boat() {
 
 }
 
 void Boat::update(int status, int curCapacity, int x, int y, int direction) {
+
 	this->status = status;
 	this->curCapacity = curCapacity;
 	this->prePos = this->pos;
@@ -100,7 +102,6 @@ int Boat::getOrderCapacity() {
 
 void Boat::act(int act)
 {
-	cerr << act << endl;
 	if (act == FORWARD) {
 		forward();
 	}

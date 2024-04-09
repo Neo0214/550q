@@ -28,6 +28,7 @@ private:
 	int curAct;
 	bool force;
 	int target; // 港口id---------售卖id
+	int preTarget;
 	// 私有函数
 
 public:

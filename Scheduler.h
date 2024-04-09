@@ -35,6 +35,9 @@ private:
 	int startProductId = 0;
 	vector<int> harborWhoGotReceive; // 记录哪个港口在这一帧中接收了货物
 
+	//tmp variable
+	int isbuy;
+
 	// 私有函数
 	void findHarbor(int robotId); //找最近的港口
 	void findProductAndHarbor(int robotId); //找收益率最高的物品和对应港口
@@ -47,8 +50,9 @@ private:
 	void buyRobot(int buyIndex);
 	bool boatAtBuy(int boatId);
 	void setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN]);
-	int findBestHarbor(const Coord& pos);
+	int findBestHarbor(const Boat& boat);
 	bool atTarget(Coord pos, int targetId);
+	int hasBoat(int harborId);
 public:
 	Scheduler();
 
