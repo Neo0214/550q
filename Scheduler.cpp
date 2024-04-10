@@ -396,7 +396,7 @@ void Scheduler::Update() {
 
 				clearWhenBoatComeBack(i, boats[i].preTarget);
 				boats[i].target = targetId;
-				boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
+				//boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
 			}
 			else if (targetId != -1) {
 				// 有的可去
@@ -409,7 +409,7 @@ void Scheduler::Update() {
 					synchronizeWhenSwitch(i, targetId);
 				}
 
-				boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
+				//boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
 
 			}
 		}
@@ -423,7 +423,7 @@ void Scheduler::Update() {
 		}
 		else if (!boats[i].isFree() && (boats[i].status == MOVING || boats[i].status == RECOVER)) {
 			// 在去目标路上的船
-			boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
+			//boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
 
 		}
 		else if (!boats[i].isFree() && boats[i].status == LOADING) {
@@ -463,7 +463,7 @@ int Scheduler::findBestHarbor(const Boat& boat)
 		int bestDeliveryPlace = -1;
 		for (int i = harborNum; i < harborNum + boatDeliveryPlace.size(); i++)
 		{
-			int distance = boatPathPlanner.getDistance(boat.pos, i);
+			int distance = 0;
 			if (distance < mindistance) {
 				mindistance = distance;
 				bestDeliveryPlace = i;
@@ -479,7 +479,7 @@ int Scheduler::findBestHarbor(const Boat& boat)
 		if (boat.preTarget == i)
 			continue;
 
-		int distance = boatPathPlanner.getDistance(pos, i);
+		int distance = 0;
 		if (harbors[i].productPrices.size() / float(distance) > max) {
 			max = harbors[i].productPrices.size() / float(distance);
 			bestHarborId = i;
