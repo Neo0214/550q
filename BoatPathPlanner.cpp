@@ -35,16 +35,9 @@ void BoatPathPlanner::init(char map[LEN][LEN], vector<Harbor>& harbors, vector<D
 	for (int i = 0; i < harborNum; i++) {
 		// 对每个港口生成前往路径地图
 		BFSearch(this->map[i], map, harbors[i].berthCoord);
-
-
-
-	}
-	for (int i = harborNum; i < harborNum + sellPlaceNum; i++) {
-		// 对每个售卖点生成前往路径地图
-		BFSearch(this->map[i], map, deliveries[i - harborNum].getPos());
 		Node** pathMap = this->map[i];
 		//写到文件
-		//if (i == 6) {
+		//if (i == 3) {
 		//	ofstream out("pathMap.txt");
 		//	for (int i = 0; i < LEN; i++) {
 		//		for (int j = 0; j < LEN; j++) {
@@ -63,6 +56,13 @@ void BoatPathPlanner::init(char map[LEN][LEN], vector<Harbor>& harbors, vector<D
 		//	exit(0);
 		//
 		//}
+
+
+	}
+	for (int i = harborNum; i < harborNum + sellPlaceNum; i++) {
+		// 对每个售卖点生成前往路径地图
+		BFSearch(this->map[i], map, deliveries[i - harborNum].getPos());
+
 
 	}
 }
@@ -218,7 +218,6 @@ int BoatPathPlanner::findBestSellPlace(Coord cur)
 
 int BoatPathPlanner::nextMove(Coord curPos, int curDirect, int mapId, char originMap[LEN][LEN])
 {
-
 	Node** pathMap = this->map[mapId]; // 调出地图
 	int curDistance = pathMap[curPos.x][curPos.y].distance;
 	if (pathMap[curPos.x][curPos.y].direct == 5) {
@@ -232,7 +231,7 @@ int BoatPathPlanner::nextMove(Coord curPos, int curDirect, int mapId, char origi
 		if (pathMap[curPos.x][curPos.y].direct == 2) {
 			return LEFTTURN;
 		}
-		else if ((pathMap[curPos.x + 1][curPos.y + 1].direct == 3 && pathMap[curPos.x + 1][curPos.y + 1].distance <= curDistance) || pathMap[curPos.x + 1][curPos.y + 1].direct == ORIGIN) {
+		else if ((pathMap[curPos.x + 1][curPos.y + 1].direct == 3 && pathMap[curPos.x + 1][curPos.y + 1].distance < curDistance) || pathMap[curPos.x + 1][curPos.y + 1].direct == ORIGIN) {
 			return RIGHTTURN;
 		}
 		break;
@@ -241,7 +240,7 @@ int BoatPathPlanner::nextMove(Coord curPos, int curDirect, int mapId, char origi
 		if (pathMap[curPos.x][curPos.y].direct == 3) {
 			return LEFTTURN;
 		}
-		else if ((pathMap[curPos.x - 1][curPos.y - 1].direct == 2 && pathMap[curPos.x - 1][curPos.y - 1].distance <= curDistance) || pathMap[curPos.x - 1][curPos.y - 1].direct == ORIGIN) {
+		else if ((pathMap[curPos.x - 1][curPos.y - 1].direct == 2 && pathMap[curPos.x - 1][curPos.y - 1].distance < curDistance) || pathMap[curPos.x - 1][curPos.y - 1].direct == ORIGIN) {
 			return RIGHTTURN;
 		}
 		break;
@@ -250,7 +249,7 @@ int BoatPathPlanner::nextMove(Coord curPos, int curDirect, int mapId, char origi
 		if (pathMap[curPos.x][curPos.y].direct == 1) {
 			return LEFTTURN;
 		}
-		else if ((pathMap[curPos.x - 1][curPos.y + 1].direct == 0 && pathMap[curPos.x - 1][curPos.y + 1].distance <= curDistance) || pathMap[curPos.x - 1][curPos.y + 1].direct == ORIGIN) {
+		else if ((pathMap[curPos.x - 1][curPos.y + 1].direct == 0 && pathMap[curPos.x - 1][curPos.y + 1].distance < curDistance) || pathMap[curPos.x - 1][curPos.y + 1].direct == ORIGIN) {
 			return RIGHTTURN;
 		}
 		break;
@@ -259,13 +258,13 @@ int BoatPathPlanner::nextMove(Coord curPos, int curDirect, int mapId, char origi
 		if (pathMap[curPos.x][curPos.y].direct == 0) {
 			return LEFTTURN;
 		}
-		else if ((pathMap[curPos.x + 1][curPos.y - 1].direct == 1 && pathMap[curPos.x + 1][curPos.y - 1].distance <= curDistance) || pathMap[curPos.x + 1][curPos.y - 1].direct == ORIGIN) {
+		else if ((pathMap[curPos.x + 1][curPos.y - 1].direct == 1 && pathMap[curPos.x + 1][curPos.y - 1].distance < curDistance) || pathMap[curPos.x + 1][curPos.y - 1].direct == ORIGIN) {
 			return RIGHTTURN;
 		}
 		break;
 
 	}
-	if (curDirect == pathMap[curPos.x][curPos.y].direct && canForward(curDirect, curPos, originMap))
+	if (curDirect == pathMap[curPos.x][curPos.y].direct || canForward(curDirect, curPos, originMap))
 		return FORWARD;
 	else {
 		// 实在是没有可走的
@@ -338,6 +337,7 @@ bool BoatPathPlanner::canForward(int curDirect, Coord curPos, char originMap[LEN
 	for (int i = startX; i <= endX; i++) {
 		for (int j = startY; j <= endY; j++) {
 			if (i < 0 || j < 0 || i >= LEN || j >= LEN || !isBoatPath(originMap[i][j])) {
+				cerr << "can't forward" << '\n';
 				return false;
 			}
 		}

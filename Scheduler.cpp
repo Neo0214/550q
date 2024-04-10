@@ -387,11 +387,11 @@ void Scheduler::Update() {
 	}
 
 	for (int i = 0; i < boatNum; i++) {
-		//cerr << boats[i].pos << " " << boats[i].key << '\n';
+		cerr << boats[i].pos << " " << boats[i].key << '\n';
 		if (boats[i].isFree() && boats[i].status == MOVING) {
 			// 没有目标的空闲船
 			int targetId = findBestHarbor(boats[i]);
-			//cerr << "go to " << targetId << '\n';
+			cerr << "go to " << targetId << '\n';
 			if (targetId >= harborNum) {
 
 				clearWhenBoatComeBack(i, boats[i].preTarget);
