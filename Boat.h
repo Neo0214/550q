@@ -16,7 +16,6 @@ private:
 	int status;
 	Coord pos;
 	Coord prePos;
-	Coord key; // 路径核心点位置
 	int direction;
 	int curCapacity;
 	int curValue;
@@ -54,4 +53,5 @@ public:
 	void rot(int rotDirect);
 	void forward();
 	bool isFree();
+	void nextAct(int harborNum);
 };

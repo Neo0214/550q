@@ -31,7 +31,8 @@ private:
 	int minBackTime; // 最小回港时间
 	// 动态数据
 	int frame; // 当前帧号
-	int score = 0;
+	int score = 0; // 当前分数
+	int robotTotalScore = 0;
 	int startProductId = 0;
 	vector<int> harborWhoGotReceive; // 记录哪个港口在这一帧中接收了货物
 
@@ -51,7 +52,6 @@ private:
 	bool boatAtBuy(int boatId);
 	void setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN]);
 	int findBestHarbor(const Boat& boat);
-	bool atTarget(Coord pos, int targetId);
 	int hasBoat(int harborId);
 public:
 	Scheduler();

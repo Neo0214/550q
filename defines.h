@@ -38,6 +38,8 @@
 
 using namespace std;
 constexpr int reverseMove[4] = { 1,0,3,2 }; // 移动方向反转数组
+constexpr int leftTurn[4] = { 2,3,1,0 };
+constexpr int rightTurn[4] = { 3,2,0,1 };
 
 
 #define isRobotPath(point) (point == EMPTY_SPACE || point == MAIN_LAND || point == BUY_ROBOT_SPACE \
@@ -48,3 +50,5 @@ constexpr int reverseMove[4] = { 1,0,3,2 }; // 移动方向反转数组
 	|| point==DELIVERY)
 
 #define isSafePath(point) (point == MAIN_LAND || point == BUY_ROBOT_SPACE || point == BUY_SHIP_SPACE || point == OVERPASS_MAIN)
+
+#define isHarbor(point) (point== HARBOR_SPACE || point==LOAD_SPACE)

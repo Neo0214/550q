@@ -326,7 +326,7 @@ void Scheduler::Update() {
 		if (action == 1) //放下物品
 		{
 			harbors[robots[i].atHarbor].productPrices.push_back(products[robots[i].carryProduct].price);
-			score += products[robots[i].carryProduct].price;
+			robotTotalScore += products[robots[i].carryProduct].price;
 			// 已放下物品，对港口进行同步
 			// 给港口的订单中物品数量+1
 			this->harborWhoGotReceive.push_back(robots[i].atHarbor);
@@ -387,16 +387,15 @@ void Scheduler::Update() {
 	}
 
 	for (int i = 0; i < boatNum; i++) {
-		cerr << boats[i].pos << " " << boats[i].key << '\n';
 		if (boats[i].isFree() && boats[i].status == MOVING) {
 			// 没有目标的空闲船
 			int targetId = findBestHarbor(boats[i]);
-			cerr << "go to " << targetId << '\n';
+			//cerr << "go to " << targetId << '\n';
 			if (targetId >= harborNum) {
-
 				clearWhenBoatComeBack(i, boats[i].preTarget);
 				boats[i].target = targetId;
-				//boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
+				boats[i].action = boatPathPlanner.getPath(BoatState(boats[i].pos, boats[i].direction), targetId);
+				boats[i].curAct = 0;
 			}
 			else if (targetId != -1) {
 				// 有的可去
@@ -408,22 +407,13 @@ void Scheduler::Update() {
 				{
 					synchronizeWhenSwitch(i, targetId);
 				}
-
-				//boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
-
-			}
-		}
-		else if (!boats[i].isFree() && atTarget(boats[i].pos, boats[i].target)) {
-			// 抵达目标的船
-			boats[i].act(DRIVEIN);
-			if (boats[i].target >= harborNum) {
-				boats[i].target = -1;
-				boats[i].preTarget = -1;
+				boats[i].action = boatPathPlanner.getPath(BoatState(boats[i].pos, boats[i].direction), targetId);
+				boats[i].curAct = 0;
 			}
 		}
 		else if (!boats[i].isFree() && (boats[i].status == MOVING || boats[i].status == RECOVER)) {
 			// 在去目标路上的船
-			//boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
+			boats[i].nextAct(harborNum);
 
 		}
 		else if (!boats[i].isFree() && boats[i].status == LOADING) {
@@ -463,7 +453,7 @@ int Scheduler::findBestHarbor(const Boat& boat)
 		int bestDeliveryPlace = -1;
 		for (int i = harborNum; i < harborNum + boatDeliveryPlace.size(); i++)
 		{
-			int distance = 0;
+			int distance = boatPathPlanner.getDistance(BoatState(boat.pos, boat.direction), i);
 			if (distance < mindistance) {
 				mindistance = distance;
 				bestDeliveryPlace = i;
@@ -479,7 +469,7 @@ int Scheduler::findBestHarbor(const Boat& boat)
 		if (boat.preTarget == i)
 			continue;
 
-		int distance = 0;
+		int distance = boatPathPlanner.getDistance(BoatState(boat.pos, boat.direction), i);
 		if (harbors[i].productPrices.size() / float(distance) > max) {
 			max = harbors[i].productPrices.size() / float(distance);
 			bestHarborId = i;
@@ -524,7 +514,7 @@ void Scheduler::printValue() {
 		}
 		cerr << "harbor " << i << " " << count << endl;
 	}
-	cerr << "final " << score << endl;
+	cerr << "final " << robotTotalScore << endl;
 }
 
 void Scheduler::clearWhenBoatComeBack(int boatId, int harborId) {
@@ -589,55 +579,25 @@ void Scheduler::buyRobot(int buyIndex)
 
 void Scheduler::setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN])
 {
-	// 为当前港口设置最佳停靠点
-	Coord point = curHarbor.boatCoord; // 判题器给出的坐标
-	char tmp[5][5] = { { -1} };
-	tmp[2][2] = 0; // 将该点作为中心点
-	for (int i = -2; i <= 2; i++) {
-		for (int j = -2; j <= 2; j++) {
-			if (i == 0 && j == 0)
-				continue;
-			tmp[2 + i][2 + j] = -1; // -1表示该点非港口
-			if (point.x + i < 0 || point.x + i >= LEN || point.y + j < 0 || point.y + j >= LEN)
-				continue;
-			char ch = my_map[point.x + i][point.y + j];
-			if (ch == HARBOR_SPACE) {
-				tmp[2 + i][2 + j] = 0;
-			}
-		}
-	}
-
-	for (int i = 0; i < 5; i++)
+	queue<Coord> q;
+	q.push(curHarbor.boatCoord);
+	int visited[LEN][LEN] = { 0 };
+	visited[curHarbor.boatCoord.x][curHarbor.boatCoord.y] = 1;
+	while (!q.empty())
 	{
-		for (int j = 0; j < 5; j++)
+		Coord cur = q.front();
+		q.pop();
+		if (isHarbor(my_map[cur.x][cur.y]))
 		{
-			if (tmp[i][j] == 0) {
-				// 找到第一个点，是左上角
-				// 判断港口是横着还是竖着
-
-				if (tmp[i][j + 2] == 0) {
-					// 横着
-					if (point.x + i - 1 >= 0 && my_map[point.x + i - 2 - 1][point.y + j - 2] == LOAD_SPACE) {
-						// 上覆盖
-						curHarbor.berthCoord = Coord(point.x + i - 2 - 2 + 1, point.y + j + 1 - 2);
-					}
-					else {
-						// 下覆盖
-						curHarbor.berthCoord = Coord(point.x + i + 3 - 2 - 1, point.y + j + 1 - 2);
-					}
-				}
-				else {
-					// 竖着
-					if (point.y + j - 1 >= 0 && my_map[point.x + i - 2][point.y + j - 1 - 2] == LOAD_SPACE) {
-						// 左覆盖
-						curHarbor.berthCoord = Coord(point.x + i + 1 - 2, point.y + j - 2 - 2 + 1);
-					}
-					else {
-						// 右覆盖
-						curHarbor.berthCoord = Coord(point.x + i + 1 - 2, point.y + j + 3 - 2 - 1);
-					}
-				}
-				return;
+			curHarbor.circleCoord.push_back(cur);
+		}
+		for (int i = 0; i < 4; i++)
+		{
+			Coord next = cur + i;
+			if (isHarbor(my_map[next.x][next.y]) && !visited[next.x][next.y])
+			{
+				visited[next.x][next.y] = 1;
+				q.push(next);
 			}
 		}
 	}
@@ -645,24 +605,6 @@ void Scheduler::setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN])
 }
 
 
-bool Scheduler::atTarget(Coord pos, int targetId)
-{
-	if (targetId == -1)
-	{
-		return false;
-	}
-	Coord targetPos;
-	if (targetId >= harborNum) {
-		targetPos = boatDeliveryPlace[targetId - harborNum].getPos();
-	}
-	else {
-		targetPos = harbors[targetId].berthCoord;
-	}
-	if (pos == targetPos) {
-		return true;
-	}
-	return false;
-}
 
 
 int Scheduler::hasBoat(int harborId)

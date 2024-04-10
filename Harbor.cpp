@@ -49,20 +49,7 @@ void Harbor::getBestCoord(char points[LEN][LEN])
 	//}
 }
 
-//void Harbor::clearOneOrder() {
-//	this->orders.erase(this->orders.begin(), this->orders.begin() + 1);
-//	//this->endingCost+=0.5;
-//}
-//
-//void Harbor::addOneOrder() {
-//	this->orders[0].add();
-//}
-//
-//void Harbor::newOrder(int goodsLeft, int boatId) {
-//	Order order(boatId, goodsLeft);
-//	orders.push_back(order);
-//	//this->endingCost-=0.5;
-//}
+
 
 double Harbor::getExpectedProfitRate(int robotId, double exceptProfit)
 {
@@ -117,4 +104,9 @@ void Harbor::newOrder(int goodsLeft, int boatId) {
 	Order order(boatId, goodsLeft);
 	orders.push_back(order);
 	//this->endingCost-=0.5;
+}
+
+vector<Coord> Harbor::getCoord()
+{
+	return this->circleCoord;
 }

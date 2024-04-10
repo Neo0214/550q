@@ -30,20 +30,6 @@ void Boat::update(int status, int curCapacity, int x, int y, int direction) {
 	this->prePos = this->pos;
 	this->pos = Coord(x, y);
 	this->direction = direction;
-	switch (direction) {
-	case 0:
-		this->key = Coord(x, y + 1);
-		break;
-	case 1:
-		this->key = Coord(x, y - 1);
-		break;
-	case 2:
-		this->key = Coord(x - 1, y);
-		break;
-	case 3:
-		this->key = Coord(x + 1, y);
-		break;
-	}
 }
 
 
@@ -135,4 +121,22 @@ void Boat::forward()
 bool Boat::isFree()
 {
 	return this->target == -1;
+}
+
+void Boat::nextAct(int harborNum)
+{
+	//cerr << "next" << action[curAct] << endl;
+	if (curAct == action.size()) {
+		act(DRIVEIN);
+		if (target >= harborNum) {
+			target = -1;
+			preTarget = -1;
+		}
+		return;
+	}
+	if (status == RECOVER)
+		return;
+	else if (status == MOVING) {
+		act(action[curAct++]);
+	}
 }
