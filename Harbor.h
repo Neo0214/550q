@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "defines.h"
 #include "Order.h"
 #include "Boat.h"
@@ -7,39 +7,39 @@
 
 class Harbor {
 public:
-    // ¹Ì¶¨Êı¾İ
-    int Id;
-    Coord robotCoord; // ¸Û¿ÚÖĞµÄ»úÆ÷ÈËÄ¿±ê×ø±ê
-    Coord boatCoord; // ¸Û¿ÚÖĞ£¨¿¿²´£©µÄ´¬ºËĞÄµã×ø±ê
-    Coord berthCoord; // Í£¿¿Ä¿±ê×ø±ê
-    int velocity;
-    
+	// å›ºå®šæ•°æ®
+	int Id;
+	Coord robotCoord; // æ¸¯å£ä¸­çš„æœºå™¨äººç›®æ ‡åæ ‡
+	Coord boatCoord; // æ¸¯å£ä¸­ï¼ˆé æ³Šï¼‰çš„èˆ¹æ ¸å¿ƒç‚¹åæ ‡
+	vector<Coord> circleCoord; // å¤–åœˆåæ ‡
+	int velocity;
 
-    //float area;
+
+	//float area;
 public:
-    // ¶¯Ì¬Êı¾İ
-    vector<int> productPrices;
-    vector<Order> orders; // ¼ÇÂ¼¸Û¿ÚÒÑ¾­±»·ÖÅäµÄ¶©µ¥
-    float endingCost = 1; // ¿ì½áÊøÊ±£¬ÊÇ·ñ±»Ñ¡ÖĞ
-    int totalReceived = 1;
-    bool tiger = false;
-    double prioTiger = 1;
+	// åŠ¨æ€æ•°æ®
+	vector<int> productPrices;
+	vector<Order> orders; // è®°å½•æ¸¯å£å·²ç»è¢«åˆ†é…çš„è®¢å•
+	float endingCost = 1; // å¿«ç»“æŸæ—¶ï¼Œæ˜¯å¦è¢«é€‰ä¸­
+	int totalReceived = 1;
+	bool tiger = false;
+	double prioTiger = 1;
 
-    vector<double> expectedProfitRate; // ¸Û¿Ú¸½½üµÄÎïÆ·µÄÊÕÒæÂÊ£¨´Ó´óµ½Ğ¡£©
-    vector<int> robotsGoalHarbor; // ¸ºÔğ¸Ã¸Û¿ÚµÄ»úÆ÷ÈË
-    // Ë½ÓĞº¯Êı
+	vector<double> expectedProfitRate; // æ¸¯å£é™„è¿‘çš„ç‰©å“çš„æ”¶ç›Šç‡ï¼ˆä»å¤§åˆ°å°ï¼‰
+	vector<int> robotsGoalHarbor; // è´Ÿè´£è¯¥æ¸¯å£çš„æœºå™¨äºº
+	vector<Coord> getCoord();
 
 public:
-    Harbor(int _Id, int _x, int _y, int _velocity);
-    Harbor();
-    // ¹«¹²º¯Êı
-    void getBestCoord(char points[LEN][LEN]);
-    void clearOneOrder();
-    void addOneOrder();
-    void newOrder(int goodsLeft, int boatId);
-    double getExpectedProfitRate(int robotId,double exceptProfit);
-    void appendRobot(int robotId);
-    void removeRobot(int robotId);
-    void appendProfitRate(double profitRate);
-    void removeProfitRate(double profitRate);
+	Harbor(int _Id, int _x, int _y, int _velocity);
+	Harbor();
+	// å…¬å…±å‡½æ•°
+	void getBestCoord(char points[LEN][LEN]);
+	void clearOneOrder();
+	void addOneOrder();
+	void newOrder(int goodsLeft, int boatId);
+	double getExpectedProfitRate(int robotId, double exceptProfit);
+	void appendRobot(int robotId);
+	void removeRobot(int robotId);
+	void appendProfitRate(double profitRate);
+	void removeProfitRate(double profitRate);
 };
