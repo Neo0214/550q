@@ -269,10 +269,49 @@ int BoatPathPlanner::nextMove(Coord curPos, int curDirect, int mapId, char origi
 		return FORWARD;
 	else {
 		// 实在是没有可走的
-		return rand() % 2 == 0 ? LEFTTURN : RIGHTTURN;
+		return hasToChooseTurn(curDirect, curPos, originMap);
 	}
 	return -1;
 }
+
+int BoatPathPlanner::hasToChooseTurn(int curDirect, Coord curPos, char originMap[LEN][LEN])
+{
+	int startX = curPos.x, startY = curPos.y;
+	int endX = curPos.x, endY = curPos.y;
+	switch (curDirect) {
+	case 0:
+		startX -= 1;
+		endX += 1;
+		endY += 1;
+		break;
+	case 1:
+		startX -= 1;
+		endX += 1;
+		startY -= 1;
+		break;
+	case 2:
+		startX -= 1;
+		startY -= 1;
+		endY += 1;
+		break;
+	case 3:
+		endX += 1;
+		startY -= 1;
+		endY += 1;
+		break;
+	}
+	// 先尝试左转方案
+	for (int i = startX; i <= endX; i++) {
+		for (int j = startY; j <= endY; j++) {
+			if (i < 0 || j < 0 || i >= LEN || j >= LEN || !isBoatPath(originMap[i][j])) {
+				return RIGHTTURN;
+			}
+		}
+	}
+	return LEFTTURN;
+
+}
+
 
 bool BoatPathPlanner::canForward(int curDirect, Coord curPos, char originMap[LEN][LEN])
 {

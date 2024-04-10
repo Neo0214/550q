@@ -34,4 +34,5 @@ public:
 	int nextMove(Coord curPos, int curDirect, int mapId, char originMap[LEN][LEN]);
 	int getDistance(Coord curPos, int mapId);
 	bool canForward(int curDirect, Coord curPos, char originMap[LEN][LEN]);
+	int hasToChooseTurn(int curDirect, Coord curPos, char originMap[LEN][LEN]);
 };
