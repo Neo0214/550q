@@ -233,7 +233,7 @@ void BoatPathPlanner::update(BoatState& cur, short move)
 
 }
 
-int BoatPathPlanner::getDistance(BoatState& cur, int targetId)
+int BoatPathPlanner::getDistance(BoatState cur, int targetId)
 {
 	Node*** path = this->map[targetId];
 	return path[cur.x][cur.y][cur.direction].distance;

@@ -33,5 +33,5 @@ public:
 	void searchAllPath(const char my_map[LEN][LEN], vector<Coord> startCoord, Node*** path);
 	vector<int> getPath(BoatState start, int targetId);
 	void update(BoatState& cur, short move);
-	int getDistance(BoatState& cur, int targetId);
+	int getDistance(BoatState cur, int targetId);
 };
