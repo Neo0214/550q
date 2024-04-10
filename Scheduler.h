@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "defines.h"
 #include "Map.h"
 #include "Harbor.h"
@@ -13,47 +13,51 @@
 
 class Scheduler {
 private:
-    // ¹Ì¶¨Êı¾İ
-    Map map;
-    vector<Harbor> harbors;
-    vector<Boat> boats;
-    vector<Robot> robots;
-    vector<Product> products;
-    int harborNum; // ¸Û¿ÚÊıÁ¿
-    vector<Coord> boatBuyPlace; // ¹ºÂò´¬´¦
-    vector<Delivery> boatDeliveryPlace; // ½»»õ´¦
-    int robotNum; // »úÆ÷ÈËÊıÁ¿
-    PathPlanner pathPlanner; // Â·¾¶¹æ»®Æ÷
-    BoatPathPlanner boatPathPlanner; // ´¬µÄÂ·¾¶¹æ»®Æ÷
+	// å›ºå®šæ•°æ®
+	Map map;
+	vector<Harbor> harbors;
+	vector<Boat> boats;
+	vector<Robot> robots;
+	vector<Product> products;
+	int harborNum; // æ¸¯å£æ•°é‡
+	vector<Coord> robotBuyPlace; // è´­ä¹°æœºå™¨äººå¤„
+	vector<Coord> boatBuyPlace; // è´­ä¹°èˆ¹å¤„
+	vector<Delivery> boatDeliveryPlace; // äº¤è´§å¤„
+	int robotNum; // æœºå™¨äººæ•°é‡
+	PathPlanner pathPlanner; // è·¯å¾„è§„åˆ’å™¨
+	BoatPathPlanner boatPathPlanner; // èˆ¹çš„è·¯å¾„è§„åˆ’å™¨
+	int boatNum; // èˆ¹çš„æ•°é‡
+	int boatCapacity; // èˆ¹çš„å®¹é‡
+	int minBackTime; // æœ€å°å›æ¸¯æ—¶é—´
+	// åŠ¨æ€æ•°æ®
+	int frame; // å½“å‰å¸§å·
+	int score = 0;
+	int startProductId = 0;
+	vector<int> harborWhoGotReceive; // è®°å½•å“ªä¸ªæ¸¯å£åœ¨è¿™ä¸€å¸§ä¸­æ¥æ”¶äº†è´§ç‰©
 
-    int boatCapacity; // ´¬µÄÈİÁ¿
-    int minBackTime; // ×îĞ¡»Ø¸ÛÊ±¼ä
-    // ¶¯Ì¬Êı¾İ
-    int frame; // µ±Ç°Ö¡ºÅ
-    int score = 0;
-    int startProductId = 0;
-    vector<int> harborWhoGotReceive; // ¼ÇÂ¼ÄÄ¸ö¸Û¿ÚÔÚÕâÒ»Ö¡ÖĞ½ÓÊÕÁË»õÎï
+	//tmp variable
+	int isbuy;
 
-    // Ë½ÓĞº¯Êı
-    void findHarbor(int robotId); //ÕÒ×î½üµÄ¸Û¿Ú
-    void findProductAndHarbor(int robotId); //ÕÒÊÕÒæÂÊ×î¸ßµÄÎïÆ·ºÍ¶ÔÓ¦¸Û¿Ú
-    vector<int> getFreeBoat(); // »ñÈ¡¿ÕÏĞ´¬Ö»
-    int selectFastestHarbor(int countNeeded, int timeTocomeBack, int holdedValue, int boatId);
-    int selectAvailableFastestHarborWithGoingFromOriginPoint();
-    void loadGoods(Boat* _boat,Harbor* _harbor);
-    //int getValue(int harborId);
-    float getFutureValue(int harborId, int total, int boatId);
-    int getFutureValueFromOriginPoint(int harborId, int total);
-    void clearWhenBoatComeBack(int boatId, int harborId);
-    void clearWhenBoatSwitch(int boatId, int harborId);
-    int hasBoat(int harborId);
-    void synchronizeWhenGoOut(int boatId, int harborId);
-    void synchronizeWhenSwitch(int boatId, int harborId);
+	// ç§æœ‰å‡½æ•°
+	void findHarbor(int robotId); //æ‰¾æœ€è¿‘çš„æ¸¯å£
+	void findProductAndHarbor(int robotId); //æ‰¾æ”¶ç›Šç‡æœ€é«˜çš„ç‰©å“å’Œå¯¹åº”æ¸¯å£
+	void loadGoods(Boat* _boat, Harbor* _harbor);
+	void clearWhenBoatComeBack(int boatId, int harborId);
+	void clearWhenBoatSwitch(int boatId, int harborId);
+	void synchronizeWhenGoOut(int boatId, int harborId);
+	void synchronizeWhenSwitch(int boatId, int harborId);
+	void buyBoat(int buyIndex);
+	void buyRobot(int buyIndex);
+	bool boatAtBuy(int boatId);
+	void setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN]);
+	int findBestHarbor(const Boat& boat);
+	bool atTarget(Coord pos, int targetId);
+	int hasBoat(int harborId);
 public:
-    Scheduler();
+	Scheduler();
 
-    bool NextFrame();
-    void Update();
-    void printValue();
-    void printDebug();
+	bool NextFrame();
+	void Update();
+	void printValue();
+	void printDebug();
 };

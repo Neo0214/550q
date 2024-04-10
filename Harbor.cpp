@@ -1,12 +1,12 @@
-#include "Harbor.h"
+ï»¿#include "Harbor.h"
 
-Harbor::Harbor(int Id,int x, int y, int velocity)
+Harbor::Harbor(int Id, int x, int y, int velocity)
 {
 	this->Id = Id;
 	this->boatCoord = Coord(x, y);
 	this->velocity = velocity;
-	//orders=vector<Order>();
-	//area = 0;
+	this->orders = vector<Order>();
+
 }
 Harbor::Harbor() {
 
@@ -15,15 +15,15 @@ Harbor::Harbor() {
 
 void Harbor::getBestCoord(char points[LEN][LEN])
 {
-	//TODO: Ñ°ÕÒ¸üºÏÊÊµÄ×ø±ê
+	//TODO: å¯»æ‰¾æ›´åˆé€‚çš„åæ ‡
 	robotCoord = boatCoord;
 
-	//// ´Ó×óÉÏ½Ç¿ªÊ¼±éÀú
+	//// ä»å·¦ä¸Šè§’å¼€å§‹éå†
 	//Coord searchCoords[12] = { Coord(leftTopX+1, leftTopY),Coord(leftTopX + 2, leftTopY),Coord(leftTopX + 1, leftTopY+3),Coord(leftTopX + 2, leftTopY+3),
 	//	Coord(leftTopX, leftTopY + 1),Coord(leftTopX, leftTopY + 2),Coord(leftTopX+3, leftTopY + 1),Coord(leftTopX+3, leftTopY + 2),
 	//	Coord(leftTopX,leftTopY),Coord(leftTopX + 3, leftTopY),Coord(leftTopX, leftTopY + 3),Coord(leftTopX + 3, leftTopY + 3)
 	//};
-	//// ÓÒ×óÉÏÏÂ 0123
+	//// å³å·¦ä¸Šä¸‹ 0123
 	//int searchDirection[16] = { 1,1,0,0,2,2,3,3,1,1,0,0,2,3,2,3 };
 	//for (int i = 0; i < 12; i++)
 	//{
@@ -66,13 +66,13 @@ void Harbor::getBestCoord(char points[LEN][LEN])
 
 double Harbor::getExpectedProfitRate(int robotId, double exceptProfit)
 {
-	removeProfitRate(exceptProfit); // ÏÈÉ¾³ı
+	removeProfitRate(exceptProfit); // å…ˆåˆ é™¤
 	int idex = find(robotsGoalHarbor.begin(), robotsGoalHarbor.end(), robotId) - robotsGoalHarbor.begin();
 	double sum = accumulate(
-		expectedProfitRate.begin() + std::min(productPerAgent * idex,int(expectedProfitRate.size())),
+		expectedProfitRate.begin() + std::min(productPerAgent * idex, int(expectedProfitRate.size())),
 		expectedProfitRate.begin() + std::min(productPerAgent * (idex + 1), int(expectedProfitRate.size())),
 		0.0);
-	appendProfitRate(exceptProfit); // ÔÙÌí¼Ó
+	appendProfitRate(exceptProfit); // å†æ·»åŠ 
 	return sum;
 }
 
@@ -92,7 +92,7 @@ void Harbor::appendProfitRate(double profitRate)
 {
 	auto iter = lower_bound(expectedProfitRate.begin(), expectedProfitRate.end(), profitRate, [](double a, double b) {
 		return a > b;
-		}); // ¶ş·Ö²éÕÒ
+		}); // äºŒåˆ†æŸ¥æ‰¾
 	expectedProfitRate.insert(iter, profitRate);
 	return;
 }
@@ -104,6 +104,7 @@ void Harbor::removeProfitRate(double profitRate)
 }
 
 void Harbor::clearOneOrder() {
+	//cerr << "size" << orders.size() << endl;
 	this->orders.erase(this->orders.begin(), this->orders.begin() + 1);
 	//this->endingCost+=0.5;
 }

@@ -1,46 +1,57 @@
-#pragma once
+ï»¿#pragma once
 #include "defines.h"
 #include "Order.h"
 #include "Coord.h"
 #define MOVING 0
-#define NORMAL 1
-#define WAITING 2
+#define RECOVER 1
+#define LOADING 2
 
 class Boat {
-    friend class Scheduler;
+	friend class Scheduler;
 private:
-    // ¹Ì¶¨Êı¾İ
-    int id;
-    int capacity;
-    // ¶¯Ì¬Êı¾İ
-    int status;
-    Coord pos;
-    int direction;
-    int curCapacity;
-    int curValue;
-    int preLoadNum;
-    vector<Order> orders;
-    int turns;
-    bool atLast = false;
-    // Ë½ÓĞº¯Êı
+	// å›ºå®šæ•°æ®
+	int id;
+	int capacity;
+	// åŠ¨æ€æ•°æ®
+	int status;
+	Coord pos;
+	Coord prePos;
+	Coord key; // è·¯å¾„æ ¸å¿ƒç‚¹ä½ç½®
+	int direction;
+	int curCapacity;
+	int curValue;
+	int preLoadNum;
+	vector<Order> orders;
+	int turns;
+	bool atLast = false;
+	vector<int> action;
+	int curAct;
+	bool force;
+	int target; // æ¸¯å£id---------å”®å–id
+	int preTarget;
+	// ç§æœ‰å‡½æ•°
 
 public:
-    Boat(int _id, int _capacity);
-    Boat();
-    // ¹«¹²º¯Êı
-    void update(int status, int curCapacity, int x, int y, int direction);
-    void gotoHarbor(int harborId);
-    void comeBack(int frame);
-    int getStatus();
-    int getPos();
-    int getCurCapacity();
-    void addGoods(int num, int value);
-    int getCurValue();
-    int getPre();
-    void clearOrders();
-    void clearOneOrder();
-    void addOneOrder();
-    int getOrderCapacity();
-    void newOrder(int goodsLeft, int harborId);
-    int originPos();
+	Boat(int _id, int _capacity);
+	Boat();
+	// å…¬å…±å‡½æ•°
+	void update(int status, int curCapacity, int x, int y, int direction);
+	int getStatus();
+	int getPos();
+	int getCurCapacity();
+	void addGoods(int num, int value);
+	int getCurValue();
+	int getPre();
+	void clearOrders();
+	void clearOneOrder();
+	void addOneOrder();
+	int getOrderCapacity();
+	void newOrder(int goodsLeft, int harborId);
+	int originPos();
+	void act(int act);
+	void leave();
+	void driveIn();
+	void rot(int rotDirect);
+	void forward();
+	bool isFree();
 };

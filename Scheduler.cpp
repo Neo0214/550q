@@ -1,15 +1,15 @@
-#include "Scheduler.h"
+ï»¿#include "Scheduler.h"
 
 Scheduler::Scheduler() {
 #ifdef TIME_DEBUG
 	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 #endif // TIME_DEBUG
+	isbuy = 0;
 
-	int sellPlace = -1;
 	map = Map();
 	this->robotNum = 0;
 	for (int i = 0; i < 200; i++) {
-		char line[201] = {0};
+		char line[201] = { 0 };
 		scanf("%s", line);
 		for (int j = 0; j < 200; j++) {
 			map.setPoint(i, j, line[j]);
@@ -18,50 +18,58 @@ Scheduler::Scheduler() {
 			case BUY_SHIP_SPACE:
 				this->boatBuyPlace.push_back(Coord(i, j + 1));
 				break;
-			case DELIVERY:
-				this->boatDeliveryPlace.push_back(Delivery(Coord(i,j),sellPlace--));
+
+			case BUY_ROBOT_SPACE:
+				this->robotBuyPlace.push_back(Coord(i, j));
 				break;
 			}
-			
+
 		}
 	}
-	
+
 	scanf("%d", &this->harborNum);
 	vector<Coord> harborsCoord = vector<Coord>(harborNum);
 	for (int i = 0; i < harborNum; i++) {
 		int id, x, y, velocity;
 		scanf("%d %d %d %d", &id, &x, &y, &velocity);
 		Harbor curHarbor = Harbor(id, x, y, velocity);
+		setBestBerthCoord(curHarbor, map.point);
 		curHarbor.getBestCoord(map.point);
 		harbors.push_back(curHarbor);
 		harborsCoord[i] = curHarbor.robotCoord;
 	}
+	int sellPlace = harborNum;
+	for (int i = 0; i < LEN; i++) {
+		for (int j = 0; j < LEN; j++) {
+			if (map.point[i][j] == DELIVERY) {
+				boatDeliveryPlace.push_back(Delivery(Coord(i, j), sellPlace++));
+			}
+		}
+	}
+
 	pathPlanner.initHarborPath(map.point, harborsCoord);
-	cerr << "initHarborPath ok" << endl;
 
 
-	// Å²Ò»ÏÂ£¬°ÑharborÅ²µ½Ç°°ë£¬-n½»»õ¸ÛÅ²µ½ºóÃæ
-	this->robots=vector<Robot>();
-	this->boats=vector<Boat>();
+	this->robots = vector<Robot>();
+	this->boats = vector<Boat>();
 	int Capacity = 0;
 	scanf("%d", &Capacity);
 	this->boatCapacity = Capacity;
 
-	// Éú³É´¬ÔËÂ·ÏßÍ¼
-	this->boatPathPlanner=BoatPathPlanner();
-
-	this->boatPathPlanner.initBoatPathPlanner(map.point, harbors, boatBuyPlace, boatDeliveryPlace);
-	cerr << "initBoatPath ok" << endl;	
+	// ç”Ÿæˆèˆ¹è¿è·¯çº¿å›¾
+	this->boatPathPlanner = BoatPathPlanner(harborNum, boatDeliveryPlace.size());
+	this->boatPathPlanner.init(map.point, harbors, boatDeliveryPlace);
 
 
-	// ½áÎ²
+
+	// ç»“å°¾
 	char end[100];
-	scanf("%s",end);
+	scanf("%s", end);
 #ifdef TIME_DEBUG
 	std::chrono::steady_clock::time_point ending = std::chrono::steady_clock::now();
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(ending - start);
 	double percent = time_span.count() / 15000 / 5 * 100;
-	cerr << "Time used: " <<time_span.count()<<" "<< setiosflags(ios::fixed) << setprecision(4) << percent << "%" << endl;
+	cerr << "Time used: " << time_span.count() << " " << setiosflags(ios::fixed) << setprecision(4) << percent << "%" << endl;
 #endif // TIME_DEBUG
 
 	printf("OK\n");
@@ -69,16 +77,19 @@ Scheduler::Scheduler() {
 }
 
 bool Scheduler::NextFrame() {
-	
-	if (frame == 15000) {
+	if (frame == 14999)
+	{
 		printValue();
+	}
+	if (frame == 15000) {
+		boatPathPlanner.clean();
 		return false;
 	}
 	int money;
-	if (!scanf("%d %d", &this->frame, &money)) // ¶ÁµôµÚÒ»ĞĞframeºÍmoney
+	if (!scanf("%d %d", &this->frame, &money)) // è¯»æ‰ç¬¬ä¸€è¡Œframeå’Œmoney
 		return false;
+	this->score = money;
 
-	cerr << "frame " << frame << endl;
 
 	int changeGoodsCount;
 	scanf("%d", &changeGoodsCount);
@@ -88,25 +99,25 @@ bool Scheduler::NextFrame() {
 		if (val == 0) {
 			continue;
 		}
-		vector<int> distanceToHarbors=vector<int>(harborNum);
-		for (int j = 0;j < harborNum; j++)
+		vector<int> distanceToHarbors = vector<int>(harborNum);
+		for (int j = 0; j < harborNum; j++)
 		{
-			distanceToHarbors[j]=pathPlanner.getDistanceToHarbor(j,Coord(x,y));
+			distanceToHarbors[j] = pathPlanner.getDistanceToHarbor(j, Coord(x, y));
 		}
 		Product newProduct = Product(x, y, val, frame + 1000, distanceToHarbors);
 		products.push_back(newProduct);
 
 		int nearestHarborId = newProduct.getNearestHarborId();
-		if (nearestHarborId != -1) // ²úÆ·ÓĞ¿É´ï¸Û¿Ú
+		if (nearestHarborId != -1) // äº§å“æœ‰å¯è¾¾æ¸¯å£
 			harbors[nearestHarborId].appendProfitRate(newProduct.bestProfitRate);
 	}
-	cerr << "Goods over" << endl;
+
 	for (int i = startProductId; i < products.size(); i++)
 	{
 		if (products[i].expireTime <= frame)
 		{
 			startProductId++;
-			//¿´Çé¿öÊÇ·ñ¼ÓÉÏÏÂÃæµÄ´úÂë
+			//çœ‹æƒ…å†µæ˜¯å¦åŠ ä¸Šä¸‹é¢çš„ä»£ç 
 			//int nearestHarborId;
 			//if(!products[i].locked && (nearestHarborId = products[i].getNearestHarborId()) != -1)
 			//	harbor[nearestHarborId].removeProfitRate(products[i].bestProfitRate);
@@ -114,26 +125,24 @@ bool Scheduler::NextFrame() {
 		else
 			break;
 	}
-	int robotCount;
-	scanf("%d",&robotCount);
-	for (int i = 0; i < robotCount; i++) {
+
+	scanf("%d", &robotNum);
+	for (int i = 0; i < robotNum; i++) {
 		int id, x, y, hasGoods;
-		scanf("%d %d %d %d", &id, &x, &y, &hasGoods);
+		scanf("%d %d %d %d", &id, &hasGoods, &x, &y);
 		robots[id].update(hasGoods, x, y);
 	}
-	cerr << "Robots over" << endl;
-	int harborCount;
-	scanf("%d", &harborCount);
-	for (int i = 0; i < harborCount; i++) {
+	scanf("%d", &this->boatNum);
+	for (int i = 0; i < boatNum; i++) {
 		int id, curCapacity, x, y, direction, status;
 		scanf("%d %d %d %d %d %d", &id, &curCapacity, &x, &y, &direction, &status);
-		boats[id].update(status,curCapacity, x, y, direction);
+		//cerr << frame << ":" << id << ' ' << curCapacity << ' ' << x << ' ' << y << ' ' << direction << ' ' << status << '\n';
+		boats[id].update(status, curCapacity, x, y, direction);
 	}
-	cerr << "Harbors over" << endl;
 	char end[100];
-	scanf("%s", end); // ¶Áµô½áÎ²
-	
-	
+	scanf("%s", end); // è¯»æ‰ç»“å°¾
+
+
 	return true;
 }
 
@@ -141,13 +150,13 @@ void Scheduler::findHarbor(int robotId)
 {
 	float minDistance = 10000;
 	int bestHarborId = robots[robotId].goalHarbor;
-	if(bestHarborId==-1 || harbors[bestHarborId].tiger) // Èç¹ûÒÑ¾­Ö¸¶¨¸Û¿ÚÔò²»ÔÙ²éÕÒ
+	if (bestHarborId == -1 || harbors[bestHarborId].tiger) // å¦‚æœå·²ç»æŒ‡å®šæ¸¯å£åˆ™ä¸å†æŸ¥æ‰¾
 		for (int i = 0; i < harborNum; i++)
 		{
 			if (harbors[i].tiger)
 				continue;
 			float distance = pathPlanner.getDistanceToHarbor(i, Coord(robots[robotId].x, robots[robotId].y));
-			if (distance >0 && distance < minDistance)
+			if (distance > 0 && distance < minDistance)
 			{
 				minDistance = distance;
 				bestHarborId = i;
@@ -156,9 +165,9 @@ void Scheduler::findHarbor(int robotId)
 		}
 	if (bestHarborId != -1)
 	{
-		if(robots[robotId].goalHarbor==-1) // ³õÊ¼Çé¿ö£¬Ô­ÏÈÃ»ÓĞÎ»ÓÚ¸Û¿Ú
+		if (robots[robotId].goalHarbor == -1) // åˆå§‹æƒ…å†µï¼ŒåŸå…ˆæ²¡æœ‰ä½äºæ¸¯å£
 			harbors[bestHarborId].appendRobot(robotId);
-		else if (robots[robotId].goalHarbor != bestHarborId) // Õı³£À´Ëµ²»»á½øÈë´Ëif£¬³ı·ÇÔÚfindHarborÖĞÄ¿±ê¸Û¿Ú·¢Éú±ä»¯
+		else if (robots[robotId].goalHarbor != bestHarborId) // æ­£å¸¸æ¥è¯´ä¸ä¼šè¿›å…¥æ­¤ifï¼Œé™¤éåœ¨findHarborä¸­ç›®æ ‡æ¸¯å£å‘ç”Ÿå˜åŒ–
 		{
 			harbors[robots[robotId].goalHarbor].removeRobot(robotId);
 			harbors[bestHarborId].appendRobot(robotId);
@@ -170,47 +179,47 @@ void Scheduler::findHarbor(int robotId)
 
 void Scheduler::findProductAndHarbor(int robotId)
 {
-	if (robots[robotId].moves.size() != robots[robotId].curMoveCount) // Èç¹û»¹ÓĞÎ´×ßÍêµÄÂ·²»ÒªÉèÖÃÄ¿±ê
+	if (robots[robotId].moves.size() != robots[robotId].curMoveCount) // å¦‚æœè¿˜æœ‰æœªèµ°å®Œçš„è·¯ä¸è¦è®¾ç½®ç›®æ ‡
 		return;
-	int startHarbor = robots[robotId].atHarbor; // ½«´ËÇ°findHarborÉèÖÃµÄÄ¿±ê¸Û¿Ú×÷Îª³ö·¢¸Û¿Ú
+	int startHarbor = robots[robotId].atHarbor; // å°†æ­¤å‰findHarborè®¾ç½®çš„ç›®æ ‡æ¸¯å£ä½œä¸ºå‡ºå‘æ¸¯å£
 
 	int bestProductId;
 	int bestHarborId = -1;
 	double maxProfitRate = -1;
-	for (int i=startProductId;i<products.size();i++)
+	for (int i = startProductId; i < products.size(); i++)
 	{
-		if(products[i].locked) // ²úÆ·±»Ëø¶¨
+		if (products[i].locked) // äº§å“è¢«é”å®š
 			continue;
 		int nearestHarborId = products[i].getNearestHarborId();
-		if (nearestHarborId == -1) // ²úÆ·Ã»ÓĞ¿É´ï¸Û¿Ú
+		if (nearestHarborId == -1) // äº§å“æ²¡æœ‰å¯è¾¾æ¸¯å£
 			continue;
-		int pathLen1 = products[i].distanceToHarbors[startHarbor]; 
-		if (pathLen1 == -1) // ²úÆ·²»¿Éµ½´ï»úÆ÷ÈË³ö·¢¸Û¿Ú
+		int pathLen1 = products[i].distanceToHarbors[startHarbor];
+		if (pathLen1 == -1) // äº§å“ä¸å¯åˆ°è¾¾æœºå™¨äººå‡ºå‘æ¸¯å£
 			continue;
-		if(frame+pathLen1>=products[i].expireTime) // »úÆ÷ÈËµ½´ï²úÆ·µÄÊ±¼ä³¬¹ıÁË¹ıÆÚÊ±¼ä
+		if (frame + pathLen1 >= products[i].expireTime) // æœºå™¨äººåˆ°è¾¾äº§å“çš„æ—¶é—´è¶…è¿‡äº†è¿‡æœŸæ—¶é—´
 			continue;
 		int pathLen2 = products[i].distanceToHarbors[nearestHarborId];
 		int pathLen = pathLen1 + pathLen2;
 		double profitRate = (pow(products[i].price, 1 + robotId * valueImportance) / pathLen * exp(-expireTimeImportance * (products[i].expireTime - frame))
 			+ harbors[nearestHarborId].getExpectedProfitRate(robotId, products[i].bestProfitRate) / productPerAgent * expectedWeight
 			);
-		if(profitRate > maxProfitRate)
+		if (profitRate > maxProfitRate)
 		{
-			maxProfitRate=profitRate;
-			bestProductId=i;
-			bestHarborId=nearestHarborId;
+			maxProfitRate = profitRate;
+			bestProductId = i;
+			bestHarborId = nearestHarborId;
 		}
 	}
 	if (bestHarborId != -1)
 	{
-		if (robots[robotId].goalHarbor != bestHarborId) // »úÆ÷ÈËÄ¿±ê¸Û¿Ú·¢Éú±ä»¯
+		if (robots[robotId].goalHarbor != bestHarborId) // æœºå™¨äººç›®æ ‡æ¸¯å£å‘ç”Ÿå˜åŒ–
 		{
 			harbors[robots[robotId].goalHarbor].removeRobot(robotId);
 			harbors[bestHarborId].appendRobot(robotId);
 		}
 		robots[robotId].assignTask(pathPlanner.getPathFromHarbor(startHarbor, Coord(products[bestProductId].x, products[bestProductId].y)), 0, -1, bestHarborId);
 		products[bestProductId].locked = true;
-		harbors[bestHarborId].removeProfitRate(products[bestProductId].bestProfitRate); // ÉÌÆ·Ëø¶¨ºó£¬¸Û¿Ú¶ÔÓ¦ÊÕÒæÂÊ¼õÉÙ
+		harbors[bestHarborId].removeProfitRate(products[bestProductId].bestProfitRate); // å•†å“é”å®šåï¼Œæ¸¯å£å¯¹åº”æ”¶ç›Šç‡å‡å°‘
 		robots[robotId].carryProduct = bestProductId;
 	}
 
@@ -218,59 +227,77 @@ void Scheduler::findProductAndHarbor(int robotId)
 
 
 void Scheduler::Update() {
-	// ´Ë´¦×ö¾ö²ß£¬²¢Êä³öÖ¸Áî
-	for (int i = 0; i <robotNum; i++) 
+	//if (frame < 10)
+	//{
+	//	buyRobot(0);
+	//}
+	// æ­¤å¤„åšå†³ç­–ï¼Œå¹¶è¾“å‡ºæŒ‡ä»¤
+	if (frame >= 2 && this->score >= 2000 && isbuy < 8) {
+		buyRobot(0);
+		isbuy++;
+	}
+
+	for (int i = 0; i < robotNum; i++)
 	{
-		if (robots[i].target == -1) 
+		if (robots[i].target == -1)
 		{
-			findProductAndHarbor(i); //ÎªµÚi¸ö»úÆ÷ÈË·ÖÅäÈÎÎñ
+			//cerr << i << "findProductAndHarbor" << endl;
+			findProductAndHarbor(i); //ä¸ºç¬¬iä¸ªæœºå™¨äººåˆ†é…ä»»åŠ¡
 		}
 		else if (robots[i].target == 1)
 		{
-			findHarbor(i); // µÚi¸ö»úÆ÷ÈËÈ¥×î½üµÄ¸Û¿Ú 
+			//cerr << i << "findHarbor" << endl;
+			findHarbor(i); // ç¬¬iä¸ªæœºå™¨äººå»æœ€è¿‘çš„æ¸¯å£ 
 		}
 	}
-	//·¢³öÖ¸Áî¿ØÖÆ»úÆ÷ÈËÒÆ¶¯
-	// Åö×²Í¼³õÊ¼»¯
+	//å‘å‡ºæŒ‡ä»¤æ§åˆ¶æœºå™¨äººç§»åŠ¨
+	// ç¢°æ’å›¾åˆå§‹åŒ–
 	int collisionMap[LEN][LEN] = { 0 };
+	int safeMap[LEN][LEN] = { 0 };
 	for (int i = 0; i < LEN; i++)
 	{
 		for (int j = 0; j < LEN; j++)
 		{
-			if(isRobotPath(map.point[i][j]))
+			if (isRobotPath(map.point[i][j]))
 				collisionMap[i][j] = 0;
 			else
 				collisionMap[i][j] = -1;
+			if (isSafePath(map.point[i][j]))
+				safeMap[i][j] = 0;
+			else
+				safeMap[i][j] = -1;
 		}
 	}
+
 	for (int i = 0; i < robotNum; i++)
 	{
-		collisionMap[robots[i].x][robots[i].y] = i + 1; // ×¢ÒâÕâÀïÊÇi+1£¬ÒòÎª»úÆ÷ÈËid´Ó0¿ªÊ¼
+		collisionMap[robots[i].x][robots[i].y] = i + 1; // æ³¨æ„è¿™é‡Œæ˜¯i+1ï¼Œå› ä¸ºæœºå™¨äººidä»0å¼€å§‹
 	}
-	// ÒÆ¶¯Õ»ºÍÊ£ÓàÕ»
+	// ç§»åŠ¨æ ˆå’Œå‰©ä½™æ ˆ
 	stack<pair<int, int>> moveRobots;
 	stack<pair<int, int>> restRobots;
-	// Ê£ÓàÕ»³õÊ¼»¯
-	for (int i = robotNum - 1; i >= 0; i--) 
+	// å‰©ä½™æ ˆåˆå§‹åŒ–
+	for (int i = robotNum - 1; i >= 0; i--)
 	{
-		restRobots.push(make_pair(i,-1)); // firstÊÇ»úÆ÷ÈËid£¬secondÊÇ»úÆ÷ÈËµÄÒÆ¶¯·½Ïò
+		restRobots.push(make_pair(i, -1)); // firstæ˜¯æœºå™¨äººidï¼Œsecondæ˜¯æœºå™¨äººçš„ç§»åŠ¨æ–¹å‘
 	}
-	// ÕÒµ½Ã¿¸ö»úÆ÷ÈËµÄÎŞ³åÍ»ÒÆ¶¯·½Ïò
+	// æ‰¾åˆ°æ¯ä¸ªæœºå™¨äººçš„æ— å†²çªç§»åŠ¨æ–¹å‘
+
 	int countToughTask = 0;
-	while(!restRobots.empty())
+	while (!restRobots.empty())
 	{
-		pair<int,int> curRobot = restRobots.top();
+		pair<int, int> curRobot = restRobots.top();
 		restRobots.pop();
-		
-		pair<int, vector<int>> moveAndCollision = robots[curRobot.first].moveOneStep(collisionMap);
-		if(countToughTask<=10)
+
+		pair<int, vector<int>> moveAndCollision = robots[curRobot.first].moveOneStep(collisionMap, safeMap);
+		if (countToughTask <= 10)
 			while (moveAndCollision.second.size())
 			{
-				//cerr << "tough task" << moveAndCollision.second.size() <<' ' << moveRobots.size() <<endl;
+				//cerr << "tough task" << moveAndCollision.second.size() << ' ' << moveRobots.size() << endl;
 				countToughTask++;
-				pair<int,int> redoRobot = moveRobots.top();
+				pair<int, int> redoRobot = moveRobots.top();
 				moveRobots.pop();
-				robots[redoRobot.first].redoOneStep(collisionMap,redoRobot.second);
+				robots[redoRobot.first].redoOneStep(collisionMap, redoRobot.second);
 				auto iter = find(moveAndCollision.second.begin(), moveAndCollision.second.end(), redoRobot.first);
 				if (iter != moveAndCollision.second.end())
 					moveAndCollision.second.erase(iter);
@@ -280,61 +307,66 @@ void Scheduler::Update() {
 			while (moveAndCollision.second.size() && !moveRobots.empty())
 			{
 				//cerr << "really tough" << endl;
-				pair<int,int> redoRobot = moveRobots.top();
+				pair<int, int> redoRobot = moveRobots.top();
 				moveRobots.pop();
-				robots[redoRobot.first].redoOneStep(collisionMap,redoRobot.second);
+				robots[redoRobot.first].redoOneStep(collisionMap, redoRobot.second);
 				restRobots.push(redoRobot);
 			}
 		curRobot.second = moveAndCollision.first;
 		moveRobots.push(curRobot);
 	}
-	//·¢³öÖ¸Áî¿ØÖÆ»úÆ÷ÈËÒÆ¶¯
-	while(!moveRobots.empty())
+	//å‘å‡ºæŒ‡ä»¤æ§åˆ¶æœºå™¨äººç§»åŠ¨
+
+	while (!moveRobots.empty())
 	{
 		pair<int, int> curRobot = moveRobots.top();
 		moveRobots.pop();
-		int i= curRobot.first;
+		int i = curRobot.first;
 		int action = robots[i].command(curRobot.second);
-		if (action == 1) //·ÅÏÂÎïÆ·
+		if (action == 1) //æ”¾ä¸‹ç‰©å“
 		{
 			harbors[robots[i].atHarbor].productPrices.push_back(products[robots[i].carryProduct].price);
 			score += products[robots[i].carryProduct].price;
-			// ÒÑ·ÅÏÂÎïÆ·£¬¶Ô¸Û¿Ú½øĞĞÍ¬²½
-			// ¸ø¸Û¿ÚµÄ¶©µ¥ÖĞÎïÆ·ÊıÁ¿+1
+			// å·²æ”¾ä¸‹ç‰©å“ï¼Œå¯¹æ¸¯å£è¿›è¡ŒåŒæ­¥
+			// ç»™æ¸¯å£çš„è®¢å•ä¸­ç‰©å“æ•°é‡+1
 			this->harborWhoGotReceive.push_back(robots[i].atHarbor);
 			harbors[robots[i].atHarbor].totalReceived++;
 		}
-		
+
 	}
-	// »úÆ÷ÈËÒÆ¶¯½áÊø
-	// ½áËã¶©µ¥Í¬²½
+	//// æœºå™¨äººç§»åŠ¨ç»“æŸ
+	//// ç»“ç®—è®¢å•åŒæ­¥
+
 	for (int i = 0; i < harborWhoGotReceive.size(); i++) {
-		int harborId=harborWhoGotReceive[i];
+		int harborId = harborWhoGotReceive[i];
 		int boatId = hasBoat(harborId);
-		// ÈôÓĞ´¬ÔÚ¸Û
-		if (boatId!=-1) {
-			// ¸øµ±Ç°´¬µÄ¶©µ¥Í¬²½
+		// è‹¥æœ‰èˆ¹åœ¨æ¸¯
+		if (boatId != -1) {
+			// ç»™å½“å‰èˆ¹çš„è®¢å•åŒæ­¥
+			//cerr << boatId << endl;
+			//cerr << &boats[boatId] << endl;
 			boats[boatId].addOneOrder();
-			// ¸ø¸Û¿ÚµÄ¶©µ¥Í¬²½
+			// ç»™æ¸¯å£çš„è®¢å•åŒæ­¥
 			harbors[harborId].addOneOrder();
 			harborWhoGotReceive.erase(harborWhoGotReceive.begin() + i);
 			i--;
 		}
 	}
+
 	if (harborWhoGotReceive.size() > 0) {
-		// Èç¹ûÊÇÎŞ´¬¸Û¿Ú½ÓÊÕµ½ĞÂ»õÎï£¬µ¥¶ÀÍ¬²½
+		// å¦‚æœæ˜¯æ— èˆ¹æ¸¯å£æ¥æ”¶åˆ°æ–°è´§ç‰©ï¼Œå•ç‹¬åŒæ­¥
 		for (int i = 0; i < harborWhoGotReceive.size(); i++) {
 			int harborId = harborWhoGotReceive[0];
-			// Ê×ÏÈ²éÕÒÊÇ·ñÓĞ´¬ÒªÀ´
+			// é¦–å…ˆæŸ¥æ‰¾æ˜¯å¦æœ‰èˆ¹è¦æ¥
 			if (harbors[harborId].orders.size() == 0) {
-				// Ã»ÓĞ´¬ÒªÀ´£¬²»ÀíËû
+				// æ²¡æœ‰èˆ¹è¦æ¥ï¼Œä¸ç†ä»–
 			}
 			else {
-				// ÓĞ´¬ÒªÀ´£¬°´ÕÕÏÈÀ´ºóµ½²é¿´ÄÜ·ñ¼Ó¸øÏÈÀ´µÄ´¬
+				// æœ‰èˆ¹è¦æ¥ï¼ŒæŒ‰ç…§å…ˆæ¥ååˆ°æŸ¥çœ‹èƒ½å¦åŠ ç»™å…ˆæ¥çš„èˆ¹
 				for (int j = 0; j < harbors[harborId].orders.size(); j++) {
 					int boatId = harbors[harborId].orders[j].id;
 					if (boats[boatId].getOrderCapacity() + 1 < boatCapacity) {
-						// ·ÅµÃÏÂ£¬Í¬²½
+						// æ”¾å¾—ä¸‹ï¼ŒåŒæ­¥
 						boats[boatId].addOneOrder();
 						harbors[harborId].addOneOrder();
 						harborWhoGotReceive.erase(harborWhoGotReceive.begin() + i);
@@ -342,132 +374,141 @@ void Scheduler::Update() {
 						break;
 					}
 					else {
-						// ·Å²»ÏÂ£¬²»ÀíËû
+						// æ”¾ä¸ä¸‹ï¼Œä¸ç†ä»–
 					}
 				}
 			}
 		}
 	}
-	// µ¥¶ÀÉ¸Ò»ÏÂ¸Û¿Ú
-	//for (int i = 0; i < 10; i++) {
-	//	if (harbor[i].orders.size()==0 && harbor[i].productPrices.size() >= boatCapacity)
-	//		harbor[i].tiger = true;
-	//}
-
-	// Ê×ÏÈ¿´´¬ÊÇ·ñĞèÒª»ØÈ¥½»»õ
-	
-		
 
 
+	if (frame == 1) {
+		buyBoat(0);
+	}
 
-	// ½áÎ²
+	for (int i = 0; i < boatNum; i++) {
+		//cerr << boats[i].pos << " " << boats[i].key << '\n';
+		if (boats[i].isFree() && boats[i].status == MOVING) {
+			// æ²¡æœ‰ç›®æ ‡çš„ç©ºé—²èˆ¹
+			int targetId = findBestHarbor(boats[i]);
+			//cerr << "go to " << targetId << '\n';
+			if (targetId >= harborNum) {
+
+				clearWhenBoatComeBack(i, boats[i].preTarget);
+				boats[i].target = targetId;
+				boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
+			}
+			else if (targetId != -1) {
+				// æœ‰çš„å¯å»
+				boats[i].target = targetId;
+				if (boats[i].curCapacity == 0) {
+					synchronizeWhenGoOut(i, targetId);
+				}
+				else
+				{
+					synchronizeWhenSwitch(i, targetId);
+				}
+
+				boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
+
+			}
+		}
+		else if (!boats[i].isFree() && atTarget(boats[i].pos, boats[i].target)) {
+			// æŠµè¾¾ç›®æ ‡çš„èˆ¹
+			boats[i].act(DRIVEIN);
+			if (boats[i].target >= harborNum) {
+				boats[i].target = -1;
+				boats[i].preTarget = -1;
+			}
+		}
+		else if (!boats[i].isFree() && (boats[i].status == MOVING || boats[i].status == RECOVER)) {
+			// åœ¨å»ç›®æ ‡è·¯ä¸Šçš„èˆ¹
+			boats[i].act(boatPathPlanner.nextMove(boats[i].key, boats[i].direction, boats[i].target, map.point));
+
+		}
+		else if (!boats[i].isFree() && boats[i].status == LOADING) {
+			// åœ¨æ¸¯å£è£…è´§çš„èˆ¹
+			if (boats[i].curCapacity == boatCapacity || /*boats[i].preLoadNum == 0 &&*/ harbors[boats[i].target].productPrices.size() == 0) {
+				// æ²¡æœ‰è´§ç‰©äº† æˆ– è£…æ»¡äº†
+				boats[i].act(LEAVE);
+				boats[i].preTarget = boats[i].target;
+				boats[i].target = -1;
+			}
+			else {
+				loadGoods(&boats[i], &harbors[boats[i].target]);
+			}
+		}
+		else {
+			// ç¦»å¼€ç›®æ ‡ä¸­
+			// ä»€ä¹ˆä¹Ÿä¸åšï¼Œç­‰åˆ°å˜æˆç©ºé—²èˆ¹
+
+		}
+
+	}
+
+
+
+
+
+	// ç»“å°¾
 	printf("OK\n");
 	fflush(stdout);
 }
 
-int Scheduler::getFutureValueFromOriginPoint(int harborId, int total) {
-	int count = 0;
-	int i = 0;
-	for (int j = 0; j < harbors[harborId].orders.size(); j++) {
-		i += harbors[harborId].orders[j].productNumber;
-	}
-	int number = 0;
-	for (; i < harbors[harborId].productPrices.size() && i<total; i++) {
-		count += harbors[harborId].productPrices[i];
-		number++;
-	}
-	// countÎª¿ÉÔÚ¸Û¿Ú×°ÔØµÄ»õÎï×Ü¼ÛÖµ
-	// ÔÚ´Ë´¦ÅĞ¶ÏÊ±¼äÊÇ·ñ»¹¹»»»¸Û¿Ú
-	int loadcost = (number) / harbors[harborId].velocity;
-	if (loadcost + frame >= 15000) {
-		return -1;
-	}
-	return count/float(loadcost);
-}
+int Scheduler::findBestHarbor(const Boat& boat)
+{
 
-int Scheduler::selectAvailableFastestHarborWithGoingFromOriginPoint() {
-	int bestID = -1;
-	float value = -1;
-	for (int i = 0; i < 10; i++) {
-		if (frame>=15000) {
-			continue;
-		}
-		else {
-			float tmpValue=getFutureValueFromOriginPoint(i,boatCapacity);
-			if (tmpValue > value) {
-				value = tmpValue;
-				bestID = i;
+	if (boat.curCapacity + 10 >= boatCapacity) {
+		int mindistance = INT_MAX;
+		int bestDeliveryPlace = -1;
+		for (int i = harborNum; i < harborNum + boatDeliveryPlace.size(); i++)
+		{
+			int distance = boatPathPlanner.getDistance(boat.pos, i);
+			if (distance < mindistance) {
+				mindistance = distance;
+				bestDeliveryPlace = i;
 			}
 		}
+		return bestDeliveryPlace;
 	}
-	return bestID;
-}
-/*
-* @param countNeeded »¹ÄÜ×°ÔØµÄ»õÎïÊıÁ¿
-* @param timeToComeBack Ö±½Ó»ØÈ¥½»»õµÄÊ±¼ä
-* @param holdedValue ÒÑ×°µÄ»õÎï¼ÛÖµ
-*/
-int Scheduler::selectFastestHarbor(int countNeeded, int timeTocomeBack, int holdedValue, int boatId) {
-	int bestID = -1;
-	float value = -1;
-	for (int i = 0; i < 10; i++) {
-		// ¼ÆËãÎ´À´µÄ¼ÛÖµ£¨µ¥Î»£ºĞ§ÂÊ Ç®/Ê±¼ä£©
-		float tmpValue = getFutureValue(i, countNeeded, boatId);
-		// (´¦±ØĞë¿¼ÂÇ£¬Èô¸Ã¸Û¿Ú»õÎï·Ç³£¶à£¬ÊÇ·ñÒªÅÅ¶Ó£¬ÅÅ¶Ó¿ÉÄÜÒ²ÊÇ»®ËãµÄ)
+	Coord pos = boat.pos;
 
-		if (tmpValue > value) {
-			value = tmpValue;
-			bestID = i;
+	float max = 0;
+	int bestHarborId = -1;
+	for (int i = 0; i < harborNum; i++) {
+		if (boat.preTarget == i)
+			continue;
+
+		int distance = boatPathPlanner.getDistance(pos, i);
+		if (harbors[i].productPrices.size() / float(distance) > max) {
+			max = harbors[i].productPrices.size() / float(distance);
+			bestHarborId = i;
 		}
 	}
-	
-	return bestID;
+	return bestHarborId;
 }
-/*
-* @param harborId Ä¿±ê¸Û¿Úid
-* @param total    ×î´ó¿É×°»õÎïÊıÁ¿
-*/
-float Scheduler::getFutureValue(int harborId, int total, int boatId) {
-	int count = 0;
-	int i = 0;
-	for (int j = 0; j < harbors[harborId].orders.size(); j++) {
-		i+=harbors[harborId].orders[j].productNumber;
+
+bool Scheduler::boatAtBuy(int boatId)
+{
+	Coord boatPos = boats[boatId].pos;
+	for (int i = 0; i < boatBuyPlace.size(); i++)
+	{
+		if (boatPos + 0 == boatBuyPlace[i])
+			return true;
 	}
-	int number = 0;
-	for (; i < harbors[harborId].productPrices.size() && number<total; i++) {
-		count += harbors[harborId].productPrices[i];
-		number++;
-	}
-	// countÎª¿ÉÔÚ¸Û¿Ú×°ÔØµÄ»õÎï×Ü¼ÛÖµ
-	// ÔÚ´Ë´¦ÅĞ¶ÏÊ±¼äÊÇ·ñ»¹¹»»»¸Û¿Ú
-	int loadcost = number / harbors[harborId].velocity;
-	if (loadcost +  500 + frame >= 15000) {
-		return -1;
-	}
-	// ¸Ãharbor¿ÉÌá¹©µÄ»õÎïÊıÁ¿Ó¦¸ÃÔ¼µÈÓÚcountNeeded
-	if (total - number < 500/(frame/harbors[harborId].totalReceived) || boats[boatId].atLast) {
-		return count / float(loadcost + 500);
-	}
-	return -2;
+	return false;
 }
 
 
 
-vector<int> Scheduler::getFreeBoat() {
-	vector<int> boatIds;
-	for (int i = 0; i < 5; i++) {
-		if (boats[i].getPos() == -1 && boats[i].getStatus()==NORMAL)
-			boatIds.push_back(i);
-	}
-	return boatIds;
-}
+
 
 void Scheduler::loadGoods(Boat* _boat, Harbor* _harbor)
 {
-	int num = min(min(_harbor->velocity, int(_harbor->productPrices.size())),boatCapacity-_boat->getCurCapacity());
+	int num = min(min(_harbor->velocity, int(_harbor->productPrices.size())), boatCapacity - _boat->getCurCapacity());
 	int value = 0;
 	for (int i = 0; i < num; i++) {
-		value+=_harbor->productPrices[i];
+		value += _harbor->productPrices[i];
 	}
 	_boat->addGoods(num, value);
 	_harbor->productPrices.erase(_harbor->productPrices.begin(), _harbor->productPrices.begin() + num);
@@ -479,11 +520,11 @@ void Scheduler::printValue() {
 	for (int i = 0; i < harborNum; i++) {
 		int count = 0;
 		for (int j = 0; j < harbors[i].productPrices.size(); j++) {
-			count+=harbors[i].productPrices[j];
+			count += harbors[i].productPrices[j];
 		}
-		cerr<<"harbor "<<i<<" "<<count<<endl;
+		cerr << "harbor " << i << " " << count << endl;
 	}
-	cerr <<"final " << score << endl;
+	cerr << "final " << score << endl;
 }
 
 void Scheduler::clearWhenBoatComeBack(int boatId, int harborId) {
@@ -496,30 +537,23 @@ void Scheduler::clearWhenBoatSwitch(int boatId, int harborId) {
 	this->harbors[harborId].clearOneOrder();
 }
 
-int Scheduler::hasBoat(int harborId) {
-	for (int i = 0; i < 5; i++) {
-		if (boats[i].getStatus() == NORMAL && boats[i].getPos() == harborId) {
-			return i;
-		}
-	}
-	return -1;
-}
+
 
 void Scheduler::synchronizeWhenGoOut(int boatId, int harborId) {
 	int goodsLeft = harbors[harborId].productPrices.size();
 	for (int i = 0; i < harbors[harborId].orders.size(); i++) {
 		goodsLeft -= harbors[harborId].orders[i].productNumber;
 	}
-	boats[boatId].newOrder(goodsLeft,harborId);
-	harbors[harborId].newOrder(goodsLeft,boatId);
+	boats[boatId].newOrder(goodsLeft, harborId);
+	harbors[harborId].newOrder(goodsLeft, boatId);
 }
 
 void Scheduler::synchronizeWhenSwitch(int boatId, int harborId) {
-	// ÇĞ»»µÄ²»Í¬ÊÇ£¬ĞèÒªÇå³ıÔ­À´µÄ¶©µ¥
+	// åˆ‡æ¢çš„ä¸åŒæ˜¯ï¼Œéœ€è¦æ¸…é™¤åŸæ¥çš„è®¢å•
 	int prevHarbor = boats[boatId].originPos();
-	// ¶ÔÔ­À´µÄ¸Û¿ÚÍ¬²½
+	// å¯¹åŸæ¥çš„æ¸¯å£åŒæ­¥
 	harbors[prevHarbor].clearOneOrder();
-	// ¶ÔĞÂµÄ¸Û¿ÚÍ¬²½
+	// å¯¹æ–°çš„æ¸¯å£åŒæ­¥
 	int goodsLeft = harbors[harborId].productPrices.size();
 	for (int i = 0; i < harbors[harborId].orders.size(); i++) {
 		goodsLeft -= harbors[harborId].orders[i].productNumber;
@@ -527,7 +561,6 @@ void Scheduler::synchronizeWhenSwitch(int boatId, int harborId) {
 	boats[boatId].clearOneOrder();
 	boats[boatId].newOrder(goodsLeft, harborId);
 	harbors[harborId].newOrder(goodsLeft, boatId);
-
 }
 
 
@@ -538,7 +571,106 @@ void Scheduler::printDebug() {
 	for (int i = 0; i < 10; i++) {
 		cerr << "harbor " << i << " has " << harbors[i].productPrices.size() << endl;
 	}
-
-
 	int a = 0;
+}
+
+
+void Scheduler::buyBoat(int buyIndex)
+{
+	printf("lboat %d %d\n", boatBuyPlace[buyIndex].x, boatBuyPlace[buyIndex].y - 1);
+	boats.push_back(Boat(buyIndex, boatCapacity));
+}
+
+void Scheduler::buyRobot(int buyIndex)
+{
+	printf("lbot %d %d\n", robotBuyPlace[buyIndex].x, robotBuyPlace[buyIndex].y);
+	robots.push_back(Robot(robotNum, robotBuyPlace[buyIndex].x, robotBuyPlace[buyIndex].y));
+}
+
+void Scheduler::setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN])
+{
+	// ä¸ºå½“å‰æ¸¯å£è®¾ç½®æœ€ä½³åœé ç‚¹
+	Coord point = curHarbor.boatCoord; // åˆ¤é¢˜å™¨ç»™å‡ºçš„åæ ‡
+	char tmp[5][5] = { { -1} };
+	tmp[2][2] = 0; // å°†è¯¥ç‚¹ä½œä¸ºä¸­å¿ƒç‚¹
+	for (int i = -2; i <= 2; i++) {
+		for (int j = -2; j <= 2; j++) {
+			if (i == 0 && j == 0)
+				continue;
+			tmp[2 + i][2 + j] = -1; // -1è¡¨ç¤ºè¯¥ç‚¹éæ¸¯å£
+			if (point.x + i < 0 || point.x + i >= LEN || point.y + j < 0 || point.y + j >= LEN)
+				continue;
+			char ch = my_map[point.x + i][point.y + j];
+			if (ch == HARBOR_SPACE) {
+				tmp[2 + i][2 + j] = 0;
+			}
+		}
+	}
+
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 0; j < 5; j++)
+		{
+			if (tmp[i][j] == 0) {
+				// æ‰¾åˆ°ç¬¬ä¸€ä¸ªç‚¹ï¼Œæ˜¯å·¦ä¸Šè§’
+				// åˆ¤æ–­æ¸¯å£æ˜¯æ¨ªç€è¿˜æ˜¯ç«–ç€
+
+				if (tmp[i][j + 2] == 0) {
+					// æ¨ªç€
+					if (point.x + i - 1 >= 0 && my_map[point.x + i - 2 - 1][point.y + j - 2] == LOAD_SPACE) {
+						// ä¸Šè¦†ç›–
+						curHarbor.berthCoord = Coord(point.x + i - 2 - 2 + 1, point.y + j + 1 - 2);
+					}
+					else {
+						// ä¸‹è¦†ç›–
+						curHarbor.berthCoord = Coord(point.x + i + 3 - 2 - 1, point.y + j + 1 - 2);
+					}
+				}
+				else {
+					// ç«–ç€
+					if (point.y + j - 1 >= 0 && my_map[point.x + i - 2][point.y + j - 1 - 2] == LOAD_SPACE) {
+						// å·¦è¦†ç›–
+						curHarbor.berthCoord = Coord(point.x + i + 1 - 2, point.y + j - 2 - 2 + 1);
+					}
+					else {
+						// å³è¦†ç›–
+						curHarbor.berthCoord = Coord(point.x + i + 1 - 2, point.y + j + 3 - 2 - 1);
+					}
+				}
+				return;
+			}
+		}
+	}
+
+}
+
+
+bool Scheduler::atTarget(Coord pos, int targetId)
+{
+	if (targetId == -1)
+	{
+		return false;
+	}
+	Coord targetPos;
+	if (targetId >= harborNum) {
+		targetPos = boatDeliveryPlace[targetId - harborNum].getPos();
+	}
+	else {
+		targetPos = harbors[targetId].berthCoord;
+	}
+	if (pos == targetPos) {
+		return true;
+	}
+	return false;
+}
+
+
+int Scheduler::hasBoat(int harborId)
+{
+	for (int i = 0; i < boatNum; i++) {
+		if (boats[i].target == harborId && boats[i].status == LOADING) {
+			return i;
+		}
+	}
+	return -1;
 }

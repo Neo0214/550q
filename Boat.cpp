@@ -1,46 +1,52 @@
-#include "Boat.h"
+﻿#include "Boat.h"
 
 Boat::Boat(int _id, int _capacity)
 {
 	id = _id;
 	capacity = _capacity;
-	status = NORMAL;
-	pos = Coord(-1,-1);
+	status = MOVING;
+	pos = Coord(-1, -1);
 	curCapacity = 0;
 	preLoadNum = 0;
 	curValue = 0;
-	orders=vector<Order>();
+	orders = vector<Order>();
 	turns = 0;
-	direction=0;
+	direction = 0;
+	action = vector<int>();
+	curAct = 0;
+	prePos = Coord(-1, -1);
+	force = true;
+	target = -1;
+	preTarget = -1;
 }
 Boat::Boat() {
 
 }
 
-void Boat::update(int status,int curCapacity,int x,int y,int direction) {
+void Boat::update(int status, int curCapacity, int x, int y, int direction) {
+
 	this->status = status;
 	this->curCapacity = curCapacity;
-	this->pos= Coord(x,y);
+	this->prePos = this->pos;
+	this->pos = Coord(x, y);
 	this->direction = direction;
+	switch (direction) {
+	case 0:
+		this->key = Coord(x, y + 1);
+		break;
+	case 1:
+		this->key = Coord(x, y - 1);
+		break;
+	case 2:
+		this->key = Coord(x - 1, y);
+		break;
+	case 3:
+		this->key = Coord(x + 1, y);
+		break;
+	}
 }
 
-void Boat::gotoHarbor(int harborId) {
-	printf("ship %d %d\n", id, harborId);
-	//cerr << "boat " << id << " goto " << harborId << " with cap " << curCapacity << endl;
-	//this->pos= harborId;
-	this->status= MOVING;
-	
-}
 
-void Boat::comeBack(int frame) {
-	printf("go %d\n", id);
-	cerr << "boat " << id << " come back with cap " << this->curCapacity << endl;
-	//this->pos = -1;
-	this->status = MOVING;
-	this->curCapacity = 0;
-	this->curValue = 0;
-	this->turns++;
-}
 
 int Boat::getStatus() {
 	return status;
@@ -74,7 +80,7 @@ void Boat::clearOrders() {
 }
 
 void Boat::clearOneOrder() {
-	this->orders.erase(this->orders.begin(),this->orders.begin()+1);
+	this->orders.erase(this->orders.begin(), this->orders.begin() + 1);
 }
 
 void Boat::addOneOrder() {
@@ -88,8 +94,45 @@ void Boat::newOrder(int goodsLeft, int harborId) {
 
 int Boat::originPos() {
 	return this->orders[0].id;
-}	
+}
 
 int Boat::getOrderCapacity() {
 	return this->orders[0].productNumber;
+}
+
+void Boat::act(int act)
+{
+	if (act == FORWARD) {
+		forward();
+	}
+	else if (act == DRIVEIN) {
+		driveIn();
+	}
+	else if (act == LEAVE) {
+		leave();
+	}
+	else if (act != -1) {
+		rot(act - 1);
+	}
+}
+void Boat::leave()
+{
+	printf("dept %d", id);
+}
+void Boat::driveIn()
+{
+	printf("berth %d", id);
+}
+void Boat::rot(int rotDirect)
+{
+	printf("rot %d %d", id, rotDirect);
+}
+void Boat::forward()
+{
+	printf("ship %d", id);
+}
+
+bool Boat::isFree()
+{
+	return this->target == -1;
 }

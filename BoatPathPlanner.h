@@ -1,43 +1,38 @@
-#pragma once
-
-
-
+ï»¿#pragma once
 #include "defines.h"
-#include "Coord.h"
 #include "Harbor.h"
 #include "Delivery.h"
 
-#define BUY_TYPE 0
-#define DELIVERY_TYPE 1
-#define HARBOR_TYPE 2
-
-
-struct Edge
-{
-	vector<int> actions;
-	int length;
-	int target;
-	Edge(vector<int>& _actions, int _length, int _target) { actions = _actions; length = _length; target = _target; }
-};
-
-struct Node
-{
-	vector<Edge> edges; // ÓÃÁÚ½Ó±í
-	int type;
-	Node(int _type) { type = _type; edges = vector<Edge>(); }
+struct Node {
+	char direct;
+	short distance;
+	Node() :direct(-1), distance(-1) {}
+	Node(char _direct, int _distance) :direct(_direct), distance(_distance) {}
+	void set(char _direct, int _distance) {
+		this->direct = _direct;
+		this->distance = _distance;
+	}
 };
 
 class BoatPathPlanner {
+
 private:
-	vector<Node> berth; // °üÀ¨¹ºÂòÎ»£¬¸Û¿ÚÎ»£¬½»»õÎ»
-	int** path; // ÁÙÊ±´æ´¢·½ÏòËİÔ´Í¼
+	Node*** map; // 0-å³ 1-å·¦ 2-ä¸Š 3-ä¸‹
+	int harborNum;
+	int sellPlaceNum;
+
+
 public:
-	BoatPathPlanner();
-	void initBoatPathPlanner(const char my_map[LEN][LEN], vector<Harbor>& harbors, const vector<Coord>& buyPlace, const vector<Delivery>& deliveryPlace);
-	void generateBerthCoord(vector<Harbor>& harbors, const char my_map[LEN][LEN]);
-	void BFSSearch(const char my_map[LEN][LEN], Coord start);
-	void refreshPath();
-	bool isAvailable(const char type);
-	vector<int> getActions(Coord start, Coord end);
-	int getChangingStatus(int preAct, int act);
+	BoatPathPlanner(int harborNum, int sellPlaceNum);
+	BoatPathPlanner() {}
+	~BoatPathPlanner();
+	void init(char map[LEN][LEN], vector<Harbor>& harbors, vector<Delivery>& deliveries);
+	void BFSearch(Node** pathMap, char map[LEN][LEN], Coord begin);
+	int wholeBoatAvailable(char map[LEN][LEN], Coord& checkPos, int direct);
+	void clean();
+	int findBestSellPlace(Coord cur); // è¿”å›æœ€è¿‘çš„å”®å–ç‚¹
+	int nextMove(Coord curPos, int curDirect, int mapId, char originMap[LEN][LEN]);
+	int getDistance(Coord curPos, int mapId);
+	bool canForward(int curDirect, Coord curPos, char originMap[LEN][LEN]);
+	int hasToChooseTurn(int curDirect, Coord curPos, char originMap[LEN][LEN]);
 };

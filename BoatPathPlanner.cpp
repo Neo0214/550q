@@ -1,263 +1,351 @@
-#include "BoatPathPlanner.h"
+ï»¿#include "BoatPathPlanner.h"
 
+BoatPathPlanner::BoatPathPlanner(int harborNum, int sellPlaceNum) {
+	this->harborNum = harborNum;
+	this->sellPlaceNum = sellPlaceNum;
 
-BoatPathPlanner::BoatPathPlanner() {
-	berth=vector<Node>();
-	path = new int*[LEN];
-	for (int i = 0; i < LEN; i++) {
-		path[i] = new int[LEN];
-		memset(path[i], -1, sizeof(int)*LEN);
+}
+BoatPathPlanner::~BoatPathPlanner() {
+	//for (int i = 0; i < harborNum + sellPlaceNum; i++) {
+	//	for (int j = 0; j < LEN; j++) {
+	//		delete[] this->map[i][j];
+	//	}
+	//	delete[] this->map[i];
+	//}
+	//delete[] this->map;
+}
+void BoatPathPlanner::clean() {
+	for (int i = 0; i < harborNum + sellPlaceNum; i++) {
+		for (int j = 0; j < LEN; j++) {
+			delete[] this->map[i][j];
+		}
+		delete[] this->map[i];
 	}
+	delete[] this->map;
 }
 
-void BoatPathPlanner::generateBerthCoord(vector<Harbor>& harbors, const char my_map[LEN][LEN]) {
-	for (int i = 0; i < harbors.size(); i++) {
-		Coord leftTop = harbors[i].boatCoord;
-		cerr << leftTop << endl;
-		if (my_map[leftTop.x][leftTop.y + 2] == HARBOR_SPACE) {
-			// ËµÃ÷ÊÇºá×ÅµÄ
-			if (my_map[leftTop.x - 1][leftTop.y] == LOAD_SPACE) {
-				// ËµÃ÷ÊÇÉÏ¸²¸ÇĞÍ
-				harbors[i].berthCoord=Coord(leftTop.x - 2, leftTop.y + 1);
-			}
-			else {
-				harbors[i].berthCoord=Coord(leftTop.x + 3, leftTop.y + 1);
-			}
+void BoatPathPlanner::init(char map[LEN][LEN], vector<Harbor>& harbors, vector<Delivery>& deliveries) {
+	this->map = new Node * *[harborNum + sellPlaceNum];
+	for (int i = 0; i < harborNum + sellPlaceNum; i++) {
+		this->map[i] = new Node * [LEN];
+		for (int j = 0; j < LEN; j++) {
+			this->map[i][j] = new Node[LEN];
 		}
-		else {
-			// ËµÃ÷ÊÇÊú×ÅµÄ
-			if (my_map[leftTop.x][leftTop.y - 1] == LOAD_SPACE) {
-				// ËµÃ÷ÊÇ×ó¸²¸ÇĞÍ
-				harbors[i].berthCoord=Coord(leftTop.x + 1, leftTop.y - 2);
-			}
-			else {
-				harbors[i].berthCoord=Coord(leftTop.x + 1, leftTop.y + 3);
-			}
-		}
+	}
+	for (int i = 0; i < harborNum; i++) {
+		// å¯¹æ¯ä¸ªæ¸¯å£ç”Ÿæˆå‰å¾€è·¯å¾„åœ°å›¾
+		BFSearch(this->map[i], map, harbors[i].berthCoord);
+
+
+
+	}
+	for (int i = harborNum; i < harborNum + sellPlaceNum; i++) {
+		// å¯¹æ¯ä¸ªå”®å–ç‚¹ç”Ÿæˆå‰å¾€è·¯å¾„åœ°å›¾
+		BFSearch(this->map[i], map, deliveries[i - harborNum].getPos());
+		Node** pathMap = this->map[i];
+		//å†™åˆ°æ–‡ä»¶
+		//if (i == 6) {
+		//	ofstream out("pathMap.txt");
+		//	for (int i = 0; i < LEN; i++) {
+		//		for (int j = 0; j < LEN; j++) {
+		//			if (pathMap[i][j].distance == -1)
+		//				out << 'x';
+		//			else
+		//				out << char('0' + pathMap[i][j].direct);
+		//
+		//		}
+		//		out << endl;
+		//
+		//
+		//
+		//	}
+		//	out.close();
+		//	exit(0);
+		//
+		//}
+
 	}
 }
-
-void BoatPathPlanner::initBoatPathPlanner(const char my_map[LEN][LEN], vector<Harbor>& harbors, const vector<Coord>& buyPlace, const vector<Delivery>& deliveryPlace) {
-	// ³õÊ¼»¯Node
-	cerr << "into initBoatPathPlanner" << endl;
-	for (int i = 0; i < buyPlace.size(); i++) {
-		berth.push_back(Node(BUY_TYPE));
-	}
-	for (int i = 0; i < harbors.size(); i++) {
-		berth.push_back(Node(HARBOR_TYPE));
-	}
-	for (int i = 0; i < deliveryPlace.size(); i++) {
-		berth.push_back(Node(DELIVERY_TYPE));
-	}
-	int harborStartIndex= buyPlace.size();
-	int deliveryStartIndex= buyPlace.size() + harbors.size();
-	// Éú³É¸Û¿ÚÍ£¿¿Ä¿±ê×ø±ê
-	//generateBerthCoord(harbors, my_map);
-	cerr << "out generateBerthCoord" << endl;
-	// Ñ°Â·Í¼ÓĞÈı¸ö²¿·Ö
-	// ¹ºÂò-->¸Û¿Ú
-	// ¸Û¿Ú-->¸Û¿Ú
-	// ¸Û¿Ú-->½»»õ
-	// ³ö±í
-	// Ê×ÏÈ´Ó¹ºÂòµ½¸Û¿Ú£¬¹ãËÑ
-	for (int i = 0; i < buyPlace.size(); i++) {
-		BFSSearch(my_map, buyPlace[i]);
-		// ´ËÊ±ÒÑÉú³ÉÈ«Í¼µÄ·½ÏòËİÔ´Í¼
-		for (int j = harborStartIndex; j < deliveryStartIndex; j++) {
-
-			cerr << "generate " << i << " " << j-harborStartIndex << endl;
-			vector<int> action = getActions(buyPlace[i], harbors[j - harborStartIndex].boatCoord);
-			//for (int k = 0; k < action.size(); k++) {
-			//	cerr << action[k] << " ";
-			//}
-			//cerr << endl;
-			berth[i].edges.push_back(Edge(action, action.size(),j-harborStartIndex));
-		}
-		refreshPath();
-	}
-	cerr << "for 1" << endl;
-	// ÔÙËÑ¸Û¿Úµ½¸Û¿Ú
-	for (int i = buyPlace.size(); i < buyPlace.size() + harbors.size(); i++) {
-		BFSSearch(my_map, harbors[i - buyPlace.size()].boatCoord);
-		cerr << "ok";
-		for (int j = harborStartIndex; j < deliveryStartIndex; j++) {
-			if (i == j) {
-				continue;
-			}
-			cerr << "generate " << i << " " << j - harborStartIndex << endl;
-			int realIndex = j - harborStartIndex;
-			vector<int> action=getActions(harbors[i - buyPlace.size()].boatCoord, harbors[realIndex].boatCoord);
-			berth[i].edges.push_back(Edge(action,action.size(), realIndex));
-		}
-		refreshPath();
-	}
-	cerr << "for 2" << endl;
-	// ×îºóËÑ¸Û¿Úµ½½»»õ
-	for (int i = buyPlace.size(); i < buyPlace.size() + harbors.size(); i++) {
-		BFSSearch(my_map, harbors[i - buyPlace.size()].boatCoord);
-		for (int j = deliveryStartIndex; j < berth.size(); j++) {
-			int realIndex = j - deliveryStartIndex;
-			cerr << "generate " << i << " " <<realIndex << endl;
-			vector<int> action = getActions(harbors[i - buyPlace.size()].boatCoord, harbors[realIndex].boatCoord);
-			berth[i].edges.push_back(Edge(action, action.size(), -realIndex));
-		}
-		refreshPath();
-	}
-	cerr << "for 3" << endl;
-}
-
-bool BoatPathPlanner::isAvailable(char type) {
-	return type == SEA_SPACE || type == MAIN_SEA || type == BUY_SHIP_SPACE ||
-		type == HARBOR_SPACE || type == LOAD_SPACE || type == OVERPASS ||
-		type == OVERPASS_MAIN || type == DELIVERY;
-}
-
-void BoatPathPlanner::BFSSearch(const char my_map[LEN][LEN], Coord start) {
-	cerr << "start BFS" << endl;
-	cerr << start << endl;
+void BoatPathPlanner::BFSearch(Node** pathMap, char map[LEN][LEN], Coord begin)
+{
 	queue<Coord> q;
-	q.push(start);
-	this->path[start.x][start.y] = 0;
-	int times = 0;
+	q.push(begin);
+	pathMap[begin.x][begin.y].set(5, 0);
+	if (begin.x + 1 < LEN && isBoatPath(map[begin.x + 1][begin.y])) {
+		pathMap[begin.x + 1][begin.y].set(2, 1);
+		q.push(Coord(begin.x + 1, begin.y));
+	}
+	if (begin.x - 1 >= 0 && isBoatPath(map[begin.x - 1][begin.y])) {
+		pathMap[begin.x - 1][begin.y].set(3, 1);
+		q.push(Coord(begin.x - 1, begin.y));
+	}
+	if (begin.y + 1 < LEN && isBoatPath(map[begin.x][begin.y + 1])) {
+		pathMap[begin.x][begin.y + 1].set(1, 1);
+		q.push(Coord(begin.x, begin.y + 1));
+	}
+	if (begin.y - 1 >= 0 && isBoatPath(map[begin.x][begin.y - 1])) {
+		pathMap[begin.x][begin.y - 1].set(0, 1);
+		q.push(Coord(begin.x, begin.y - 1));
+	}
 	while (!q.empty()) {
 		Coord cur = q.front();
+		int distance = pathMap[cur.x][cur.y].distance;
 		q.pop();
 		for (int i = 0; i < 4; i++) {
 			Coord next = cur + i;
-			if (next.x < 0 || next.x >= LEN || next.y < 0 || next.y >= LEN) {
+			if (next.x < 0 || next.y < 0 || next.x >= LEN || next.y >= LEN) {
 				continue;
 			}
-			//if (start.x != 49)
-			//	cerr << (isAvailable(my_map[next.x][next.y]) && path[next.x][next.y] == -1) << endl;
-			if (isAvailable(my_map[next.x][next.y]) && path[next.x][next.y] == -1) {
-				//if (start.x != 49)
-					//cerr << times++ << endl;
-				q.push(next);
-				path[next.x][next.y] = i;
+			if ((pathMap[next.x][next.y].direct <= -1) && isBoatPath(map[next.x][next.y])) {
+				// å·²è¿‡åŸºç¡€åˆ¤æ–­ï¼Œè¿˜éœ€è¦éªŒè¯æ–¹å‘ä¸‹èˆ¹ä½“æ˜¯å¦éƒ½å¯ä»¥ç”¨
+				int type = wholeBoatAvailable(map, next, reverseMove[i]);
+				if (type == 1) {
+					// å…¨éƒ¨æ¡ä»¶é€šè¿‡ï¼Œä¸”èˆ¹èº«å…¨éƒ¨åœ¨æ­£å¸¸èŒƒå›´å†…
+					pathMap[next.x][next.y].set(reverseMove[i], distance + 1);
+					q.push(next);
+				}
+				else if (type == 2) {
+					// å…¨éƒ¨æ¡ä»¶é€šè¿‡ï¼Œä½†æ˜¯èˆ¹èº«æœ‰ä¸€éƒ¨åˆ†åœ¨è¾¹ç•Œä¸Š
+					pathMap[next.x][next.y].set(reverseMove[i] - 5, distance + 1); // è¾¹ç•Œæ ‡è®°æ˜¯ä¸èƒ½ä½œä¸ºæ¢æµ‹ç‚¹çš„
+					q.push(next);
+				}
 			}
 		}
-		
+
 	}
-	
-	cerr << "BFS done" << endl;
-	//FILE* fp = fopen("path.txt", "w");
-	//for (int i = 0; i < LEN; i++) {
-	//	for (int j = 0; j < LEN; j++) {
-	//		if (path[i][j] == -1)
-	//			fprintf(fp, "%c", my_map[i][j]);
-	//		else if (path[i][j] == 0)
-	//			fprintf(fp, "%s", "0");
-	//		else if (path[i][j]==1)
-	//			fprintf(fp,"%s","1");
-	//		else if (path[i][j]==2)
-	//			fprintf(fp,"%s","2");
-	//		else if (path[i][j]==3)
-	//			fprintf(fp,"%s","3");
-	//
-	//	}
-	//	fprintf(fp, "\n");
-	//}
-	//fclose(fp);
+
+
 }
 
-void BoatPathPlanner::refreshPath() {
-	for (int i = 0; i < LEN; i++) {
-		delete[] path[i];
+int BoatPathPlanner::wholeBoatAvailable(char map[LEN][LEN], Coord& checkPos, int direct)
+{
+	int startX = checkPos.x, startY = checkPos.y;
+	int endX = checkPos.x, endY = checkPos.y;
+	switch (direct) {
+	case 0:
+		// å‘å³
+		endX += 1;
+		startY -= 1;//
+		endY += 1;
+		break;
+	case 1:
+		// å‘å·¦
+		startX -= 1;
+		startY -= 1;
+		endY += 1;//
+		break;
+	case 2:
+		// å‘ä¸Š
+		startX -= 1;
+		endX += 1; //
+		endY += 1;
+		break;
+	case 3:
+		// å‘ä¸‹
+		startX -= 1;//
+		endX += 1;
+		startY -= 1;
+		break;
 	}
-	delete[] path;
-
-	path=new int*[LEN];
-	for (int i = 0; i < LEN; i++) {
-		path[i] = new int[LEN];
-		memset(path[i], -1, sizeof(int) * LEN);
-	}
-}
-
-vector<int> BoatPathPlanner::getActions(Coord start, Coord end) {
-	vector<int> reversedAction;
-	Coord cur = end;
-	// ËİÔ´¡£»ñÈ¡·´Ïò²Ù×÷
-	while (cur != start) {
-		reversedAction.push_back(path[cur.x][cur.y]);
-		//cerr << cur << endl;
-		//cerr << path[cur.x][cur.y] << endl;
-		switch (path[cur.x][cur.y])
-		{
-		case 0:
-			cur.y--;
-			break;
-		case 1:
-			cur.y++;
-			break;
-		case 2:
-			cur.x++;
-			break;
-		case 3:
-			cur.x--;
-			break;
-		default:
-			break;
-		}
-	}
-	reversedAction.push_back(path[cur.x][cur.y]);
-	// µ¹ÍÆ£¬»ñÈ¡ÕıÏò²Ù×÷
-	vector<int> forwardActions;
-	for (int i = reversedAction.size() - 1; i >= 0; i--) {
-		forwardActions.push_back(reversedAction[i]);
-	}
-	// ¿¼ÂÇĞı×ªºÍÖ÷¸ÉµÀ²Ù×÷ÑÓ³Ù£¬Éú³É×îÖÕ²Ù×÷ĞòÁĞ
-	vector<int> actions;
-	int preAct = 0; // ³õÊ¼×´Ì¬ÏòÓÒ
-	for (int i = 0; i < forwardActions.size(); i++) {
-		int act = forwardActions[i];
-		switch (getChangingStatus(preAct, act)) {
-		case 0:
-			actions.push_back(FORWARD);
-			break;
-		// ÓĞ×ª¶¯Ê±£¬ÏÈ²åÈëĞı×ª²Ù×÷£¬ÔÙ¼ÓÈëÇ°½ø 
-		case 1:
-			actions.push_back(LEFTTURN);
-			actions.push_back(FORWARD);
-			break;
-		case 2:
-			actions.push_back(LEFTTURN);
-			actions.push_back(LEFTTURN);
-			actions.push_back(LEFTTURN);
-			actions.push_back(FORWARD);
-			break;
-		}
-		preAct = act;
-	}
-	return actions;
-}
-
-int BoatPathPlanner::getChangingStatus(int preAct, int act) {
-	if (preAct == act)
+	if (startX < 0 || startY < 0 || endX >= LEN || endY >= LEN) {
 		return 0;
-	if (preAct <= 1) {
-		switch ((preAct+act)%2)
-		{
-		case 0:
-			return 1;
-			break;
-		case 1:
-			return 2;
-			break;
-		default:
-			break;
+	}
+	bool flag = true;
+	for (int i = startX; i <= endX; i++) {
+		for (int j = startY; j <= endY; j++) {
+			if (!isBoatPath(map[i][j])) {
+				flag = false;
+			}
 		}
+	}
+	if (flag == true) {
+		return 1;
 	}
 	else {
-		switch ((preAct + act) % 2) {
-		case 1:
-			return 1;
-			break;
+		int startX = checkPos.x, startY = checkPos.y;
+		int endX = checkPos.x, endY = checkPos.y;
+		switch (direct) {
 		case 0:
-			return 2;
+			// å‘å³
+			endX += 1;
+			endY += 1;
 			break;
-		default:
+		case 1:
+			// å‘å·¦
+			startX -= 1;
+			startY -= 1;
+			break;
+		case 2:
+			// å‘ä¸Š
+			startX -= 1;
+			endY += 1;
+			break;
+		case 3:
+			// å‘ä¸‹
+			endX += 1;
+			startY -= 1;
 			break;
 		}
+		if (startX < 0 || startY < 0 || endX >= LEN || endY >= LEN) {
+			return 0;
+		}
+		for (int i = startX; i <= endX; i++) {
+			for (int j = startY; j <= endY; j++) {
+				if (!isBoatPath(map[i][j])) {
+					return 0;
+				}
+			}
+		}
+		return 2;
 	}
 	return 0;
+}
+
+// ä»å½“å‰ä½ç½®æ‰¾åˆ°æœ€è¿‘çš„å”®å–ç‚¹
+int BoatPathPlanner::findBestSellPlace(Coord cur)
+{
+	int minDistance = INT_MAX;
+	int minIndex = -1;
+	for (int i = harborNum; i < harborNum + sellPlaceNum; i++)
+	{
+		if (this->map[i][cur.x][cur.y].distance < minDistance) {
+			minDistance = this->map[i][cur.x][cur.y].distance;
+			minIndex = i;
+		}
+	}
+	return minIndex;
+}
+
+int BoatPathPlanner::nextMove(Coord curPos, int curDirect, int mapId, char originMap[LEN][LEN])
+{
+
+	Node** pathMap = this->map[mapId]; // è°ƒå‡ºåœ°å›¾
+	int curDistance = pathMap[curPos.x][curPos.y].distance;
+	if (pathMap[curPos.x][curPos.y].direct == 5) {
+		// å·²èµ°åˆ°å…³é”®ç‚¹
+		return FORWARD;
+	}
+
+	switch (curDirect) {
+	case 0:
+		// å½“å‰æœå³
+		if (pathMap[curPos.x][curPos.y].direct == 2) {
+			return LEFTTURN;
+		}
+		else if ((pathMap[curPos.x + 1][curPos.y + 1].direct == 3 && pathMap[curPos.x + 1][curPos.y + 1].distance <= curDistance) || pathMap[curPos.x + 1][curPos.y + 1].direct == ORIGIN) {
+			return RIGHTTURN;
+		}
+		break;
+	case 1:
+		// å½“å‰æœå·¦
+		if (pathMap[curPos.x][curPos.y].direct == 3) {
+			return LEFTTURN;
+		}
+		else if ((pathMap[curPos.x - 1][curPos.y - 1].direct == 2 && pathMap[curPos.x - 1][curPos.y - 1].distance <= curDistance) || pathMap[curPos.x - 1][curPos.y - 1].direct == ORIGIN) {
+			return RIGHTTURN;
+		}
+		break;
+	case 2:
+		// å½“å‰æœä¸Š
+		if (pathMap[curPos.x][curPos.y].direct == 1) {
+			return LEFTTURN;
+		}
+		else if ((pathMap[curPos.x - 1][curPos.y + 1].direct == 0 && pathMap[curPos.x - 1][curPos.y + 1].distance <= curDistance) || pathMap[curPos.x - 1][curPos.y + 1].direct == ORIGIN) {
+			return RIGHTTURN;
+		}
+		break;
+	case 3:
+		// å½“å‰æœä¸‹
+		if (pathMap[curPos.x][curPos.y].direct == 0) {
+			return LEFTTURN;
+		}
+		else if ((pathMap[curPos.x + 1][curPos.y - 1].direct == 1 && pathMap[curPos.x + 1][curPos.y - 1].distance <= curDistance) || pathMap[curPos.x + 1][curPos.y - 1].direct == ORIGIN) {
+			return RIGHTTURN;
+		}
+		break;
+
+	}
+	if (curDirect == pathMap[curPos.x][curPos.y].direct && canForward(curDirect, curPos, originMap))
+		return FORWARD;
+	else {
+		// å®åœ¨æ˜¯æ²¡æœ‰å¯èµ°çš„
+		return hasToChooseTurn(curDirect, curPos, originMap);
+	}
+	return -1;
+}
+
+int BoatPathPlanner::hasToChooseTurn(int curDirect, Coord curPos, char originMap[LEN][LEN])
+{
+	int startX = curPos.x, startY = curPos.y;
+	int endX = curPos.x, endY = curPos.y;
+	switch (curDirect) {
+	case 0:
+		startX -= 1;
+		endX += 1;
+		endY += 1;
+		break;
+	case 1:
+		startX -= 1;
+		endX += 1;
+		startY -= 1;
+		break;
+	case 2:
+		startX -= 1;
+		startY -= 1;
+		endY += 1;
+		break;
+	case 3:
+		endX += 1;
+		startY -= 1;
+		endY += 1;
+		break;
+	}
+	// å…ˆå°è¯•å·¦è½¬æ–¹æ¡ˆ
+	for (int i = startX; i <= endX; i++) {
+		for (int j = startY; j <= endY; j++) {
+			if (i < 0 || j < 0 || i >= LEN || j >= LEN || !isBoatPath(originMap[i][j])) {
+				return RIGHTTURN;
+			}
+		}
+	}
+	return LEFTTURN;
+
+}
+
+
+bool BoatPathPlanner::canForward(int curDirect, Coord curPos, char originMap[LEN][LEN])
+{
+	int startX = curPos.x, startY = curPos.y;
+	int endX = curPos.x, endY = curPos.y;
+	switch (curDirect) {
+	case 0:
+		// å‘å³æŒªåŠ¨
+		endX += 1;
+		endY += 2;
+		break;
+	case 1:
+		startX -= 1;
+		startY -= 2;
+		break;
+	case 2:
+		startX -= 2;
+		endY += 1;
+		break;
+	case 3:
+		endX += 2;
+		startY -= 1;
+	}
+	for (int i = startX; i <= endX; i++) {
+		for (int j = startY; j <= endY; j++) {
+			if (i < 0 || j < 0 || i >= LEN || j >= LEN || !isBoatPath(originMap[i][j])) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+int BoatPathPlanner::getDistance(Coord curPos, int mapId)
+{
+	return map[mapId][curPos.x][curPos.y].distance;
 }

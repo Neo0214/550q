@@ -1,4 +1,4 @@
-#pragma once
+Ôªø#pragma once
 #define _CRT_SECURE_NO_WARNINGS
 #define TIME_DEBUG
 
@@ -8,14 +8,14 @@
 #endif // TIME_DEBUG
 
 
-#define LEN 200 // µÿÕº±ﬂ≥§
+#define LEN 200 // Âú∞ÂõæËæπÈïø
 
 
 #define EMPTY 0
 #define HARBOR -1
 
 
-// µÿÕº ‰»Î ˝æ›
+// Âú∞ÂõæËæìÂÖ•Êï∞ÊçÆ
 #define EMPTY_SPACE '.'
 #define MAIN_LAND '>'
 #define SEA_SPACE '*'
@@ -30,13 +30,21 @@
 #define DELIVERY 'T'
 
 #define FORWARD 0
-#define LEFTTURN 1
-#define RIGHTTURN 2
+#define LEFTTURN 2
+#define RIGHTTURN 1
+#define DRIVEIN 3
+#define LEAVE 4
+#define ORIGIN -5
 
 using namespace std;
-constexpr int reverseMove[4] = { 1,0,3,2 }; // “∆∂Ø∑ΩœÚ∑¥◊™ ˝◊È
+constexpr int reverseMove[4] = { 1,0,3,2 }; // ÁßªÂä®ÊñπÂêëÂèçËΩ¨Êï∞ÁªÑ
 
 
 #define isRobotPath(point) (point == EMPTY_SPACE || point == MAIN_LAND || point == BUY_ROBOT_SPACE \
 	|| point == HARBOR_SPACE || point == OVERPASS || point == OVERPASS_MAIN)
 
+#define isBoatPath(point)(point==SEA_SPACE || point==MAIN_SEA || point==BUY_ROBOT_SPACE \
+	|| point==BUY_SHIP_SPACE || point==HARBOR_SPACE || point==LOAD_SPACE || point==OVERPASS || point==OVERPASS_MAIN \
+	|| point==DELIVERY)
+
+#define isSafePath(point) (point == MAIN_LAND || point == BUY_ROBOT_SPACE || point == BUY_SHIP_SPACE || point == OVERPASS_MAIN)
