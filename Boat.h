@@ -28,6 +28,7 @@ private:
 	bool force;
 	int target; // 港口id---------售卖id
 	int preTarget;
+	bool isFirst = true;
 	// 私有函数
 
 public:

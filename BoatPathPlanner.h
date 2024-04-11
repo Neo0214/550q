@@ -21,6 +21,8 @@ private:
 	Node**** map; // 0-右 1-左 2-上 3-下
 	int harborNum;
 	int sellPlaceNum;
+	vector<vector<int>> crossedDistance;
+	vector<vector<int>> crossedTarget;
 
 
 public:
@@ -34,4 +36,6 @@ public:
 	vector<int> getPath(BoatState start, int targetId);
 	void update(BoatState& cur, short move);
 	int getDistance(BoatState cur, int targetId);
+	int getNextId(int curId, int index);
+	int getCrossedDistance(int curId, int index);
 };

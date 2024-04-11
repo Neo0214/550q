@@ -3,7 +3,8 @@
 BoatPathPlanner::BoatPathPlanner(int harborNum, int sellPlaceNum) {
 	this->harborNum = harborNum;
 	this->sellPlaceNum = sellPlaceNum;
-
+	this->crossedDistance = vector<vector<int>>(harborNum + sellPlaceNum, vector<int>(harborNum + sellPlaceNum, 10000));
+	this->crossedTarget = vector<vector<int>>(harborNum + sellPlaceNum, vector<int>(harborNum + sellPlaceNum, -1));
 }
 BoatPathPlanner::~BoatPathPlanner() {
 	// 释放内存
@@ -105,9 +106,73 @@ void BoatPathPlanner::init(char my_map[LEN][LEN], vector<Harbor>& harbors, vecto
 		vector<Coord> startCoord = { deliveries[i - harborNum].getPos() };
 		searchAllPath(my_map, startCoord, map[i]);
 	}
+	// 构建交叉路径距离图
+	for (int i = 0; i < harborNum + sellPlaceNum; i++) {
+		for (int j = 0; j < harborNum + sellPlaceNum; j++) {
+			if (i == j) {
+				crossedDistance[i][j] = 0;
+			}
+			else {
+				if (i < harborNum) {
+					// 从港口
+					for (int k = 0; k < 4; k++) {
+						if (getDistance(BoatState(harbors[i].getCoord()[0], k), j) != -1) {
+							crossedDistance[i][j] = getDistance(BoatState(harbors[i].getCoord()[0], k), j);
+							break;
+						}
+					}
+				}
+				else {
+					// 从售卖点
+					for (int k = 0; k < 4; k++) {
+						if (getDistance(BoatState(deliveries[i - harborNum].getPos(), k), j) != -1) {
+							crossedDistance[i][j] = getDistance(BoatState(deliveries[i - harborNum].getPos(), k), j);
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	// 距离图已生成，接下来转换成最短路径指向
+	for (int i = 0; i < harborNum + sellPlaceNum; i++) {
+		for (int j = 0; j < harborNum + sellPlaceNum; j++) {
+			if (i == j) {
+				continue;
+			}
+			int minDistance = crossedDistance[i][j];
+			int minTarget = j;
+			for (int k = 0; k < harborNum + sellPlaceNum; k++) {
+				if (k == i) {
+					continue;
+				}
+				if (crossedDistance[i][k] + crossedDistance[k][j] < minDistance * 1.1) {
+					minDistance = crossedDistance[i][k] + crossedDistance[k][j];
+					minTarget = k;
+				}
+			}
+			crossedDistance[i][j] = minDistance;
+			crossedTarget[i][j] = minTarget;
+		}
 
+	}
+	for (int i = 0; i < harborNum + sellPlaceNum; i++)
+	{
+		for (int j = 0; j < harborNum + sellPlaceNum; j++)
+		{
+			cerr << crossedTarget[i][j] << " ";
+		}
+		cerr << endl;
+	}
 }
-
+int BoatPathPlanner::getNextId(int curId, int index)
+{
+	//cerr << curId << " " << index << endl;
+	return crossedTarget[curId][index];
+}
+int BoatPathPlanner::getCrossedDistance(int curId, int index) {
+	return crossedDistance[curId][index];
+}
 
 bool BoatPathPlanner::isLegalWholeBoat(BoatState neighbor, const char my_map[LEN][LEN])
 {

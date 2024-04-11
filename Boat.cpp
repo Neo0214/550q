@@ -18,6 +18,7 @@ Boat::Boat(int _id, int _capacity)
 	force = true;
 	target = -1;
 	preTarget = -1;
+
 }
 Boat::Boat() {
 
@@ -129,8 +130,9 @@ void Boat::nextAct(int harborNum)
 	if (curAct == action.size()) {
 		act(DRIVEIN);
 		if (target >= harborNum) {
+			preTarget = target;
 			target = -1;
-			preTarget = -1;
+
 		}
 		return;
 	}

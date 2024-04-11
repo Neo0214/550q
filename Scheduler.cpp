@@ -232,7 +232,7 @@ void Scheduler::Update() {
 	//	buyRobot(0);
 	//}
 	// 此处做决策，并输出指令
-	if (frame >= 2 && this->score >= 2000 && isbuy < 8) {
+	if (frame >= 2 && this->score >= 2000 && isbuy < 12) {
 		buyRobot(0);
 		isbuy++;
 	}
@@ -445,37 +445,137 @@ void Scheduler::Update() {
 	fflush(stdout);
 }
 
-int Scheduler::findBestHarbor(const Boat& boat)
+int Scheduler::findBestHarbor(Boat& boat)
 {
-
-	if (boat.curCapacity + 10 >= boatCapacity) {
-		int mindistance = INT_MAX;
-		int bestDeliveryPlace = -1;
-		for (int i = harborNum; i < harborNum + boatDeliveryPlace.size(); i++)
-		{
+	if (boat.isFirst) {
+		float effi = 0;
+		int bestId = -1;
+		int nosense = 0;
+		for (int i = 0; i < harborNum; i++) {
+			int totalValue = getValue(boatCapacity, i, nosense);
 			int distance = boatPathPlanner.getDistance(BoatState(boat.pos, boat.direction), i);
-			if (distance < mindistance) {
-				mindistance = distance;
-				bestDeliveryPlace = i;
+			float curEffi = totalValue / distance;
+			if (curEffi > effi) {
+				effi = curEffi;
+				bestId = i;
+				boat.isFirst = false;
 			}
 		}
-		return bestDeliveryPlace;
+		return bestId;
 	}
-	Coord pos = boat.pos;
+	// 以下是常规切换挑选
+	float effi = 0;
+	int bestId = -1;
+	if (boat.preTarget >= harborNum) {
+		// 说明是从卖货点出发的，只需检查所有的港口
+		for (int i = 0; i < harborNum; i++) {
+			int loadFrame = 0; // 装载时间
+			int totalValue = getValue(boatCapacity, i, loadFrame);
+			int distance = boatPathPlanner.getDistance(BoatState(boat.pos, boat.direction), i);
+			float curEffi = totalValue / distance;
+			if (curEffi > effi && timeOKFromDelivery(boat.preTarget, i, loadFrame)) {
+				effi = curEffi;
+				bestId = i;
+			}
+		}
+		return bestId;
+	}
+	else {
+		// 说明是从港口出发的，需要考虑是否去交货
+		// 首先是选择港口的情况
+		for (int i = 0; i < harborNum; i++) {
+			if (i == boat.preTarget) {
+				continue;
+			}
+			int loadFrame = 0; // 装载时间
+			int totalValue = getValue(boatCapacity - boat.curCapacity, i, loadFrame);
+			int distance = boatPathPlanner.getDistance(BoatState(boat.pos, boat.direction), i);
+			float curEffi = totalValue / distance;
+			if (curEffi > effi && timeOKFromHarbor(boat.preTarget, i, loadFrame)) {
+				effi = curEffi;
+				bestId = i;
+			}
+		}
+		// 在选择港口的情况下，能不能途径其他点？
+		if (bestId != -1) {
+			if (boatPathPlanner.getNextId(boat.preTarget, bestId) != bestId && boatPathPlanner.getNextId(boat.preTarget, bestId) < harborNum) {
+				// 说明有途径情况
+				int tmpId = boatPathPlanner.getNextId(boat.preTarget, bestId);
+				int loadFrame = 0;
+				int totalValue = getValue(boatCapacity - boat.curCapacity, tmpId, loadFrame);
+				int distance = boatPathPlanner.getDistance(BoatState(boat.pos, boat.direction), tmpId);
+				float curEffi = totalValue / distance;
+				if (curEffi > effi * 0.6 && timeOKFromHarbor(boat.preTarget, tmpId, loadFrame)) {
+					effi = curEffi;
+					bestId = tmpId;
+				}
+			}
+			else {
+				// 途径是交货点
+				bestId = boatPathPlanner.getNextId(boat.preTarget, bestId);
+			}
+		}
+		else if (boat.curCapacity >= boatCapacity * 0.9) {
+			// 没有合适港口，只能去交货点
+			int minDistance = INT_MAX;
+			for (int i = harborNum; i < harborNum + boatDeliveryPlace.size(); i++) {
+				int distance = boatPathPlanner.getDistance(BoatState(boat.pos, boat.direction), i);
+				if (distance < minDistance) {
+					minDistance = distance;
+					bestId = i;
+				}
+			}
+		}
+		return bestId;
+	}
 
-	float max = 0;
-	int bestHarborId = -1;
-	for (int i = 0; i < harborNum; i++) {
-		if (boat.preTarget == i)
-			continue;
+	return bestId;
+}
 
-		int distance = boatPathPlanner.getDistance(BoatState(boat.pos, boat.direction), i);
-		if (harbors[i].productPrices.size() / float(distance) > max) {
-			max = harbors[i].productPrices.size() / float(distance);
-			bestHarborId = i;
+// 还能装多少，从哪个港口装
+int Scheduler::getValue(int canLoadNum, int harborId, int& loadFrame)
+{
+	int left = harbors[harborId].productPrices.size();
+	for (int i = 0; i < harbors[harborId].orders.size(); i++) {
+		left -= harbors[harborId].orders[i].productNumber;
+	}
+	// left就是还剩多少货物未被预订
+	int value = 0;
+	int start = harbors[harborId].productPrices.size() - left;
+	for (int i = 0; i < min(left, canLoadNum); i++) {
+		value += harbors[harborId].productPrices[i + start];
+	}
+	loadFrame = min(left, canLoadNum) / harbors[harborId].velocity + min(left, canLoadNum) % harbors[harborId].velocity == 0 ? 0 : 1;
+	return value;
+}
+
+bool Scheduler::timeOKFromDelivery(int deliveryId, int harborId, int loadFrame)
+{
+	int timeGoToHarbor = boatPathPlanner.getCrossedDistance(deliveryId, harborId);
+	int timeToComeBack = 15000;
+	for (int i = harborNum; i < harborNum + boatDeliveryPlace.size(); i++) {
+		if (boatPathPlanner.getCrossedDistance(harborId, i) < timeToComeBack) {
+			timeToComeBack = boatPathPlanner.getCrossedDistance(harborId, i);
 		}
 	}
-	return bestHarborId;
+	if (frame + timeGoToHarbor + timeToComeBack + loadFrame + 30 < 15000) {
+		return true;
+	}
+	return false;
+}
+bool Scheduler::timeOKFromHarbor(int harborIdOrigin, int harborId, int loadFrame)
+{
+	int timeGoToHarbor = boatPathPlanner.getCrossedDistance(harborIdOrigin, harborId);
+	int timeToComeBack = 15000;
+	for (int i = harborNum; i < harborNum + boatDeliveryPlace.size(); i++) {
+		if (boatPathPlanner.getCrossedDistance(harborId, i) < timeToComeBack) {
+			timeToComeBack = boatPathPlanner.getCrossedDistance(harborId, i);
+		}
+	}
+	if (frame + timeGoToHarbor + timeToComeBack + loadFrame + 30 < 15000) {
+		return true;
+	}
+	return false;
 }
 
 bool Scheduler::boatAtBuy(int boatId)
@@ -514,10 +614,12 @@ void Scheduler::printValue() {
 		}
 		cerr << "harbor " << i << " " << count << endl;
 	}
-	cerr << "final " << robotTotalScore << endl;
+	cerr << "final " << robotTotalScore - robotNum * 2000 - boatNum * 8000 + 25000 << endl;
 }
 
 void Scheduler::clearWhenBoatComeBack(int boatId, int harborId) {
+	if (harborId >= harborNum)
+		return;
 	this->boats[boatId].clearOrders();
 	this->harbors[harborId].clearOneOrder();
 }

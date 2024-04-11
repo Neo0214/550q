@@ -51,8 +51,11 @@ private:
 	void buyRobot(int buyIndex);
 	bool boatAtBuy(int boatId);
 	void setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN]);
-	int findBestHarbor(const Boat& boat);
+	int findBestHarbor(Boat& boat);
 	int hasBoat(int harborId);
+	int getValue(int canLoadNum, int harborId, int& loadFrame);
+	bool timeOKFromDelivery(int deliveryId, int harborId, int loadFrame);
+	bool timeOKFromHarbor(int harborIdOrigin, int harborId, int loadFrame);
 public:
 	Scheduler();
 
