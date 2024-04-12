@@ -45,6 +45,7 @@ public:
 	void clean();
 	void searchAllPath(const char my_map[LEN][LEN], vector<Coord> startCoord, Node*** path);
 	vector<int> getPath(BoatState start, int targetId, int boatId);
+	vector<int> getPathWithVia(BoatState start, int target1, int target2, int boatId, int& viaIndex);
 	void update(BoatState& cur, short move);
 	int getDistance(BoatState cur, int targetId);
 	int getNextId(int curId, int index);

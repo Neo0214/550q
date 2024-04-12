@@ -60,15 +60,15 @@ Scheduler::Scheduler() {
 	this->boatPathPlanner.init(map.point, harbors, boatDeliveryPlace);
 
 	robotBuyList = getRobotBuyList();
-	for (int i = 0; i < robotBuyList.size(); i++)
-		cerr << robotBuyList[i] << ' ';
-	cerr << endl;
+	for (int i = 0; i < robotBuyList.size(); i++) {}
+	//cerr << robotBuyList[i] << ' ';
+//cerr << endl;
 	boatBuyList = getBoatBuyList();
-	for (int i = 0; i < boatBuyList.size(); i++)
-		cerr << boatBuyList[i] << ' ';
-	cerr << endl;
+	for (int i = 0; i < boatBuyList.size(); i++) {}
+	//cerr << boatBuyList[i] << ' ';
+//cerr << endl;
 
-	// 结尾
+// 结尾
 	char end[100];
 	scanf("%s", end);
 #ifdef TIME_DEBUG
@@ -412,48 +412,62 @@ void Scheduler::Update() {
 		}
 	}
 
-
+	//cerr << "frame:" << frame << endl;
 	for (int i = 0; i < boatNum; i++) {
 		if (boats[i].isFree() && boats[i].status == MOVING) {
 			// 没有目标的空闲船
-			int targetId = findBestHarbor(boats[i]);
-			//cerr << "boat 1 go to " << targetId << endl;
-			if (targetId >= harborNum) {
+			//cerr << "frame " << frame << endl;
+			vector<int> targetId = findBestHarbor(boats[i]);
+			//cerr << targetId.size() << endl;
+			//cerr << "boat " << i << " go to ";
+			//for (int k = 0; k < targetId.size(); k++)
+			//	cerr << targetId[k] << " ";
+			//cerr << endl;
+
+			if (targetId.size() == 2) {
+				// 选择交货再出发
 				clearWhenBoatComeBack(i, boats[i].preTarget);
+				synchronizeWhenGoOut(i, targetId[1]);
+				//cerr << "go find a path" << endl;
 				boats[i].target = targetId;
-				boats[i].action = boatPathPlanner.getPath(BoatState(boats[i].pos, boats[i].direction), targetId, i);
+				boats[i].action = boatPathPlanner.getPathWithVia(BoatState(boats[i].pos, boats[i].direction), targetId[0], targetId[1], i, boats[i].viaIndex);
 				boats[i].curAct = 0;
+				//cerr << "go find a path-ok" << endl;
 			}
-			else if (targetId != -1) {
+			else if (targetId.size() == 1 && targetId[0] != -1) {
 				// 有的可去
 				boats[i].target = targetId;
 				if (boats[i].curCapacity == 0) {
-					synchronizeWhenGoOut(i, targetId);
+					synchronizeWhenGoOut(i, targetId[0]);
 				}
 				else
 				{
-					synchronizeWhenSwitch(i, targetId);
+					synchronizeWhenSwitch(i, targetId[0]);
 				}
-				boats[i].action = boatPathPlanner.getPath(BoatState(boats[i].pos, boats[i].direction), targetId, i);
+				boats[i].action = boatPathPlanner.getPath(BoatState(boats[i].pos, boats[i].direction), targetId[0], i);
 				boats[i].curAct = 0;
 			}
 		}
 		else if (!boats[i].isFree() && (boats[i].status == MOVING/* || boats[i].status == RECOVER*/)) {
 			// 在去目标路上的船
+			//cerr << "do nextact" << endl;
 			boats[i].nextAct(harborNum, &boatPathPlanner);
-
+			//cerr << "do nextact-ok" << endl;
 		}
 		else if (!boats[i].isFree() && boats[i].status == LOADING) {
 			// 在港口装货的船
-			if (boats[i].curCapacity == boatCapacity || /*boats[i].preLoadNum == 0 &&*/ harbors[boats[i].target].productPrices.size() == 0) {
+			//cerr << "in harbor" << endl;
+			//cerr << boats[i].target[0] << endl;
+			if (boats[i].target[0] < harborNum && (boats[i].curCapacity == boatCapacity || /*boats[i].preLoadNum == 0 &&*/ harbors[boats[i].target[0]].productPrices.size() == 0)) {
 				// 没有货物了 或 装满了
 				boats[i].act(LEAVE);
-				boats[i].preTarget = boats[i].target;
-				boats[i].target = -1;
+				boats[i].preTarget = boats[i].target[0];
+				boats[i].target = vector<int>();
 			}
-			else {
-				loadGoods(&boats[i], &harbors[boats[i].target]);
+			else if (boats[i].target[0] < harborNum) {
+				loadGoods(&boats[i], &harbors[boats[i].target[0]]);
 			}
+			//cerr << "in harbor ok" << endl;
 		}
 		else {
 			// 离开目标中
@@ -462,7 +476,7 @@ void Scheduler::Update() {
 		}
 
 	}
-
+	//cerr << "frame-ok" << endl;
 
 
 
@@ -472,8 +486,10 @@ void Scheduler::Update() {
 	fflush(stdout);
 }
 
-int Scheduler::findBestHarbor(Boat& boat)
+vector<int> Scheduler::findBestHarbor(Boat& boat)
 {
+	//cerr << "try find" << endl;
+	vector<int> bestIds = vector<int>();
 	if (boat.isFirst) {
 		float effi = 0;
 		int bestId = -1;
@@ -488,28 +504,17 @@ int Scheduler::findBestHarbor(Boat& boat)
 				boat.isFirst = false;
 			}
 		}
-		return bestId;
+		bestIds.push_back(bestId);
+		return bestIds;
 	}
 	// 以下是常规切换挑选
+	//cerr << "try find-1" << endl;
 	float effi = 0;
 	int bestId = -1;
-	if (boat.preTarget >= harborNum) {
-		// 说明是从卖货点出发的，只需检查所有的港口
-		for (int i = 0; i < harborNum; i++) {
-			int loadFrame = 0; // 装载时间
-			int totalValue = getValue(boatCapacity, i, loadFrame);
-			int distance = boatPathPlanner.getDistance(BoatState(boat.pos, boat.direction), i);
-			float curEffi = totalValue / distance;
-			if (curEffi > effi && timeOKFromDelivery(boat.preTarget, i, loadFrame)) {
-				effi = curEffi;
-				bestId = i;
-			}
-		}
-		return bestId;
-	}
-	else {
+	if (boat.preTarget < harborNum) {
 		// 说明是从港口出发的，需要考虑是否去交货
 		// 首先是选择港口的情况
+		//cerr << "try find-2" << endl;
 		for (int i = 0; i < harborNum; i++) {
 			if (i == boat.preTarget) {
 				continue;
@@ -524,6 +529,7 @@ int Scheduler::findBestHarbor(Boat& boat)
 			}
 		}
 		// 在选择港口的情况下，能不能途径其他点？
+		//cerr << "try find-3" << endl;
 		if (bestId != -1) {
 			if (boatPathPlanner.getNextId(boat.preTarget, bestId) != bestId && boatPathPlanner.getNextId(boat.preTarget, bestId) < harborNum) {
 				// 说明有途径情况
@@ -536,10 +542,15 @@ int Scheduler::findBestHarbor(Boat& boat)
 					effi = curEffi;
 					bestId = tmpId;
 				}
+				//cerr << "push " << bestId << endl;
+				bestIds.push_back(bestId);
+				return bestIds;
 			}
 			else {
 				// 途径是交货点
 				bestId = boatPathPlanner.getNextId(boat.preTarget, bestId);
+				//cerr << "push " << bestId << endl;
+				bestIds.push_back(bestId);
 			}
 		}
 		else if (boat.curCapacity >= boatCapacity * 0.9) {
@@ -552,11 +563,32 @@ int Scheduler::findBestHarbor(Boat& boat)
 					bestId = i;
 				}
 			}
+			//cerr << "push " << bestId << endl;
+			bestIds.push_back(bestId);
 		}
-		return bestId;
+		//cerr << "try find-4" << endl;
+		if (bestId >= harborNum) {
+			//cerr << "try find-5" << endl;
+			bestId = 0; // 如果后面选不出来，强制选0号港
+			for (int i = 0; i < harborNum; i++) {
+				int loadFrame = 0; // 装载时间
+				int totalValue = getValue(boatCapacity, i, loadFrame);
+				int distance = boatPathPlanner.getCrossedDistance(bestIds[0], i);
+				float curEffi = totalValue / distance;
+				if (curEffi > effi && timeOKFromDelivery(boat.preTarget, i, loadFrame)) {
+					effi = curEffi;
+					bestId = i;
+				}
+			}
+			//cerr << "try find-5" << endl;
+			bestIds.push_back(bestId);
+			return bestIds;
+		}
+		return bestIds;
 	}
 
-	return bestId;
+	bestIds.push_back(-1);
+	return bestIds;
 }
 
 // 还能装多少，从哪个港口装
@@ -739,7 +771,7 @@ void Scheduler::setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN])
 int Scheduler::hasBoat(int harborId)
 {
 	for (int i = 0; i < boatNum; i++) {
-		if (boats[i].target == harborId && boats[i].status == LOADING) {
+		if (boats[i].target.size() > 0 && boats[i].target[0] == harborId && boats[i].status == LOADING) {
 			return i;
 		}
 	}
@@ -1001,10 +1033,10 @@ vector<int> Scheduler::getBoatBuyList()
 	vector<int> boatBuyPlacePurchaseNum(boatBuyPlace.size(), 0);
 	for (int i = 0; i < boatBuyPlace.size(); i++)
 	{
-		cerr << boatBuyPlaceProportion[i] * expectedBoatNum << ' ';
+		//cerr << boatBuyPlaceProportion[i] * expectedBoatNum << ' ';
 		boatBuyPlacePurchaseNum[i] = ceil(boatBuyPlaceProportion[i] * expectedBoatNum);
-		cerr << "num";
-		cerr << boatBuyPlacePurchaseNum[i] << ' ';
+		//cerr << "num";
+		//cerr << boatBuyPlacePurchaseNum[i] << ' ';
 	}
 
 	vector<pair<int, int>> boatBuyPlacePurchaseNumAndIndex;

@@ -5,7 +5,7 @@ using namespace std;
 
 int main()
 {
-	cerr.rdbuf(nullptr);
+	//cerr.rdbuf(nullptr);
 	srand(randomSeed);
 	Scheduler scheduler;
 #ifdef TIME_DEBUG

@@ -33,6 +33,7 @@ private:
 	vector<int> target; // 港口id---------售卖id
 	int preTarget;
 	bool isFirst = true;
+	int viaIndex;
 	// 私有函数
 
 public:

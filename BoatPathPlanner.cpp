@@ -262,7 +262,7 @@ void BoatPathPlanner::addToCollisionMap(BoatState cur, int boatId)
 
 	for (int i = startX; i <= endX; i++) {
 		for (int j = startY; j <= endY; j++) {
-			cerr << "add " << i << "," << j << endl;
+			//cerr << "add " << i << "," << j << endl;
 			if (this->clpsMap[i][j].rec.size() != 0 && this->clpsMap[i][j].rec[0] == -2) {
 				continue; // 非冲突区域不占有
 			}
@@ -376,15 +376,15 @@ bool BoatPathPlanner::isOKNextMove(Coord pos, int direction, int boatId, int mov
 	}
 	for (int i = startX; i <= endX; i++) {
 		for (int j = startY; j <= endY; j++) {
-			cerr << boatId << " pos" << i << "," << j << endl;
+			//cerr << boatId << " pos" << i << "," << j << endl;
 			for (int k = 0; k < clpsMap[i][j].rec.size(); k++) {
-				cerr << clpsMap[i][j].rec[k] << " ";
+				//cerr << clpsMap[i][j].rec[k] << " ";
 			}
-			cerr << '>' << endl;
-			cerr << (this->clpsMap[i][j].rec.size() != 0 && (this->clpsMap[i][j].rec[0] == -2 || this->clpsMap[i][j].rec[0] == -1)) << endl;
-			cerr << (this->clpsMap[i][j].rec.size() == 0) << endl;
-			cerr << (this->clpsMap[i][j].rec.size() != 0 && this->clpsMap[i][j].rec[0] != boatId) << endl;
-			cerr << endl;
+			//cerr << '>' << endl;
+			//cerr << (this->clpsMap[i][j].rec.size() != 0 && (this->clpsMap[i][j].rec[0] == -2 || this->clpsMap[i][j].rec[0] == -1)) << endl;
+			//cerr << (this->clpsMap[i][j].rec.size() == 0) << endl;
+			//cerr << (this->clpsMap[i][j].rec.size() != 0 && this->clpsMap[i][j].rec[0] != boatId) << endl;
+			//cerr << endl;
 			if (this->clpsMap[i][j].rec.size() == 0 || this->clpsMap[i][j].rec[0] == -2 || this->clpsMap[i][j].rec[0] == boatId) {
 				continue;
 			}
@@ -393,6 +393,7 @@ bool BoatPathPlanner::isOKNextMove(Coord pos, int direction, int boatId, int mov
 			}
 		}
 	}
+	//cerr << "okokoko" << endl;
 	// 无碰撞，确定行动
 	clearClps(cur, boatId);
 	return true;
@@ -400,6 +401,7 @@ bool BoatPathPlanner::isOKNextMove(Coord pos, int direction, int boatId, int mov
 
 void BoatPathPlanner::clearOne(int x, int y)
 {
+	//cerr << clpsMap[x][y].rec.size() << endl;
 	if (clpsMap[x][y].rec[0] != -2) {
 		this->clpsMap[x][y].rec.erase(this->clpsMap[x][y].rec.begin());
 	}
@@ -411,7 +413,7 @@ int BoatPathPlanner::getDistanceToHarbor(int targetId, Coord cur)
 }
 void BoatPathPlanner::clearClps(BoatState cur, int boatId)
 {
-	cerr << boatId << " begin clear" << endl;
+	//cerr << boatId << " begin clear" << endl;
 	int startX = cur.x, startY = cur.y;
 	int endX = cur.x, endY = cur.y;
 	switch (cur.direction) {
@@ -434,9 +436,42 @@ void BoatPathPlanner::clearClps(BoatState cur, int boatId)
 	}
 	for (int i = startX; i <= endX; i++) {
 		for (int j = startY; j <= endY; j++) {
-			cerr << "clear" << i << "," << j << endl;
+			//cerr << "clear" << i << "," << j << endl;
 			clearOne(i, j);
-			cerr << "clear-ok" << endl;
+			//cerr << "clear-ok" << endl;
 		}
 	}
+}
+
+vector<int> BoatPathPlanner::getPathWithVia(BoatState start, int target1, int target2, int boatId, int& viaIndex)
+{
+	Node*** path = this->map[target1]; // 调出地图
+	vector<int> res = vector<int>(); // 动作序列
+	BoatState cur = start;
+	//cerr << "find 1 " << endl;
+	// 先去1号目标
+	while (path[cur.x][cur.y][cur.direction].distance != 0) {
+		// 未到终点，行走当前行动
+		res.push_back(path[cur.x][cur.y][cur.direction].move);
+		addToCollisionMap(cur, boatId);
+		// 更新行动后位置
+		update(cur, path[cur.x][cur.y][cur.direction].move);
+	}
+	// 到达终点
+	viaIndex = res.size();
+	res.push_back(DRIVEIN);
+	//cerr << "find 2 with " << viaIndex << endl;
+	path = this->map[target2];
+	// 按照刚才的最后状态继续前往2
+	while (path[cur.x][cur.y][cur.direction].distance != 0) {
+		// 未到终点，行走当前行动
+		res.push_back(path[cur.x][cur.y][cur.direction].move);
+		addToCollisionMap(cur, boatId);
+		// 更新行动后位置
+		update(cur, path[cur.x][cur.y][cur.direction].move);
+	}
+	// 到达终点
+	addToCollisionMap(cur, boatId);
+	//cerr << "find 3" << endl;
+	return res;
 }

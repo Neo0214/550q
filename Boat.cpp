@@ -18,6 +18,7 @@ Boat::Boat(int _id, int _capacity)
 	force = true;
 	target = vector<int>();
 	preTarget = -1;
+	viaIndex = -1;
 
 }
 Boat::Boat() {
@@ -121,34 +122,39 @@ void Boat::forward()
 
 bool Boat::isFree()
 {
-	return this->target == -1;
+	return this->target.size() == 0;
 }
 
 void Boat::nextAct(int harborNum, BoatPathPlanner* boatPathPlanner)
 {
-	cerr << "status" << status << endl;
-	if (curAct == action.size() && status == MOVING) {
-		cerr << "dirvein" << endl;
-		cerr << "pos: " << pos << endl;
-		cerr << "dir:" << direction << endl;
+	//cerr << curAct << " size " << action.size() << "waiting" << viaIndex << endl;
+	if ((curAct == action.size() && status == MOVING)) {
+		//cerr << "dirvein" << endl;
+		//cerr << "pos: " << pos << endl;
+		//cerr << "dir:" << direction << endl;
 		boatPathPlanner->clearClps(BoatState(pos, direction), id);
-		cerr << "drivein-ok" << endl;
+		//cerr << "drivein-ok" << endl;
+
 		act(DRIVEIN);
-		if (target >= harborNum) {
-			preTarget = target;
-			target = -1;
-		}
 		curAct++;
+
 		return;
+	}
+	else if (this->viaIndex == curAct) {
+		this->target.erase(target.begin());
+		act(DRIVEIN);
+		curAct++;
 	}
 	else if (curAct < action.size()) {
 
 		if (status == RECOVER)
 			return;
 		else if (status == MOVING) {
+			//cerr << "judge next move" << endl;
 			if (boatPathPlanner->isOKNextMove(pos, direction, id, action[curAct])) {
 				act(action[curAct++]);
 			}
+			//cerr << "judge next move-ok" << endl;
 		}
 	}
 }
