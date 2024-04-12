@@ -45,10 +45,15 @@ constexpr int rightTurn[4] = { 3,2,0,1 };
 #define isRobotPath(point) (point == EMPTY_SPACE || point == MAIN_LAND || point == BUY_ROBOT_SPACE \
 	|| point == HARBOR_SPACE || point == OVERPASS || point == OVERPASS_MAIN)
 
-#define isBoatPath(point)(point==SEA_SPACE || point==MAIN_SEA || point==BUY_ROBOT_SPACE \
+#define isBoatPath(point)(point==SEA_SPACE || point==MAIN_SEA /*|| point==BUY_ROBOT_SPACE*/ \
 	|| point==BUY_SHIP_SPACE || point==HARBOR_SPACE || point==LOAD_SPACE || point==OVERPASS || point==OVERPASS_MAIN \
 	|| point==DELIVERY)
 
 #define isSafePath(point) (point == MAIN_LAND || point == BUY_ROBOT_SPACE || point == BUY_SHIP_SPACE || point == OVERPASS_MAIN)
 
 #define isHarbor(point) (point== HARBOR_SPACE || point==LOAD_SPACE)
+
+#define normalBoatPath(point) (point==SEA_SPACE || point==OVERPASS)
+
+#define noCollapsePath(point) (point==MAIN_SEA || point==BUY_SHIP_SPACE || point==HARBOR_SPACE \
+|| point==LOAD_SPACE ||  point==OVERPASS_MAIN || point==DELIVERY)

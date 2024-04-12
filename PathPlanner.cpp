@@ -1,6 +1,6 @@
-#include "PathPlanner.h"
+ï»¿#include "PathPlanner.h"
 
-void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, Path** path) // pathÊÇµÃµ½µÄÂ·¾¶¾ØÕó
+void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, Path** path) // pathæ˜¯å¾—åˆ°çš„è·¯å¾„çŸ©é˜µ
 {
 	queue<Coord> q;
 	bool visited[LEN][LEN] = { { 0 } };
@@ -12,19 +12,19 @@ void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, P
 	{
 		Coord p = q.front();
 		q.pop();
-		//ÓÒ×óÉÏÏÂ
+		//å³å·¦ä¸Šä¸‹
 		Coord neighbors[4] = { Coord(p.x,p.y + 1),Coord(p.x,p.y - 1),Coord(p.x - 1,p.y),Coord(p.x + 1,p.y) };
-		
-		// Ëæ»ú¹¹½¨Ò»¸ö0µ½3µÄÊı×é
-		int a[4] = { 0,1,2,3 };	
-		// Ëæ»ú´òÂÒÊı×é
+
+		// éšæœºæ„å»ºä¸€ä¸ª0åˆ°3çš„æ•°ç»„
+		int a[4] = { 0,1,2,3 };
+		// éšæœºæ‰“ä¹±æ•°ç»„
 		for (int i = 0; i < 4; i++)
 		{
 			int j = rand() % 4;
 			swap(a[i], a[j]);
 		}
 
-		for (int idx = 0; idx < 4; idx++) 
+		for (int idx = 0; idx < 4; idx++)
 		{
 			int i = a[idx];
 			Coord neighbor = neighbors[i];
@@ -45,21 +45,21 @@ void PathPlanner::searchAllPath(const char my_map[LEN][LEN], Coord startCoord, P
 
 
 
-void PathPlanner::initHarborPath(const char my_map[LEN][LEN],vector<Coord> harborCoords)
+void PathPlanner::initHarborPath(const char my_map[LEN][LEN], vector<Coord> harborCoords)
 {
-	// ÎªharborsPaths·ÖÅäÄÚ´æÎªharborNum*LEN*LEN
+	// ä¸ºharborsPathsåˆ†é…å†…å­˜ä¸ºharborNum*LEN*LEN
 	this->harborNum = harborCoords.size();
-	harborsPaths = new Path** [harborNum];
+	harborsPaths = new Path * *[harborNum];
 	for (int i = 0; i < harborNum; i++)
 	{
-		harborsPaths[i] = new Path* [LEN];
+		harborsPaths[i] = new Path * [LEN];
 		for (int j = 0; j < LEN; j++)
 		{
 			harborsPaths[i][j] = new Path[LEN];
 		}
 	}
 
-	for (int i=0;i< harborNum;i++)
+	for (int i = 0; i < harborNum; i++)
 	{
 		searchAllPath(my_map, harborCoords[i], harborsPaths[i]);
 
@@ -70,13 +70,13 @@ vector<int> PathPlanner::getPathToHarbor(int harborId, Coord srcCoord)
 {
 	auto curHarborPath = harborsPaths[harborId];
 	vector<int> moves;
-	Coord p = srcCoord; // ³ö·¢µØÎªÖ¸¶¨×ø±ê
-	//Coord destCoord = harborCoord[harborId]; // Ä¿µÄµØÎª¸Û¿Ú
-	while (curHarborPath[p.x][p.y].distance!=0)
+	Coord p = srcCoord; // å‡ºå‘åœ°ä¸ºæŒ‡å®šåæ ‡
+	//Coord destCoord = harborCoord[harborId]; // ç›®çš„åœ°ä¸ºæ¸¯å£
+	while (curHarborPath[p.x][p.y].distance != 0)
 	{
 		int curMove = curHarborPath[p.x][p.y].move;
 		p = curHarborPath[p.x][p.y].lastCoord;
-		moves.push_back(reverseMove[curMove]); // ·´×ª·½Ïò
+		moves.push_back(reverseMove[curMove]); // åè½¬æ–¹å‘
 	}
 	return moves;
 }
@@ -85,19 +85,32 @@ vector<int> PathPlanner::getPathFromHarbor(int harborId, Coord destCoord)
 {
 	auto curHarborPath = harborsPaths[harborId];
 	vector<int> moves;
-	Coord p = destCoord; // Ä¿µÄµØÎªÖ¸¶¨×ø±ê
-	//Coord srcCoord = harborCoord[harborId]; // ³ö·¢µØÎª¸Û¿Ú
+	Coord p = destCoord; // ç›®çš„åœ°ä¸ºæŒ‡å®šåæ ‡
+	//Coord srcCoord = harborCoord[harborId]; // å‡ºå‘åœ°ä¸ºæ¸¯å£
 	while (curHarborPath[p.x][p.y].distance != 0)
 	{
 		moves.push_back(curHarborPath[p.x][p.y].move);
 		p = curHarborPath[p.x][p.y].lastCoord;
 	}
 
-	reverse(moves.begin(),moves.end()); // ·´×ªÂ·¾¶
+	reverse(moves.begin(), moves.end()); // åè½¬è·¯å¾„
 	return moves;
 }
 
 int PathPlanner::getDistanceToHarbor(int harborId, Coord srcCoord)
 {
 	return  harborsPaths[harborId][srcCoord.x][srcCoord.y].distance;
+}
+
+int PathPlanner::getEffectiveArea(int harborId)
+{
+	auto curHarborPath = harborsPaths[harborId];
+	int count = 0;
+	for (int i = 0; i < LEN; i++)
+		for (int j = 0; j < LEN; j++)
+		{
+			if (curHarborPath[i][j].distance != -1)
+				count++;
+		}
+	return count;
 }

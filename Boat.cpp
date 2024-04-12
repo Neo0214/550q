@@ -1,5 +1,5 @@
 ﻿#include "Boat.h"
-
+#include "BoatPathPlanner.h"
 Boat::Boat(int _id, int _capacity)
 {
 	id = _id;
@@ -16,7 +16,7 @@ Boat::Boat(int _id, int _capacity)
 	curAct = 0;
 	prePos = Coord(-1, -1);
 	force = true;
-	target = -1;
+	target = vector<int>();
 	preTarget = -1;
 
 }
@@ -104,19 +104,19 @@ void Boat::act(int act)
 }
 void Boat::leave()
 {
-	printf("dept %d", id);
+	printf("dept %d\n", id);
 }
 void Boat::driveIn()
 {
-	printf("berth %d", id);
+	printf("berth %d\n", id);
 }
 void Boat::rot(int rotDirect)
 {
-	printf("rot %d %d", id, rotDirect);
+	printf("rot %d %d\n", id, rotDirect);
 }
 void Boat::forward()
 {
-	printf("ship %d", id);
+	printf("ship %d\n", id);
 }
 
 bool Boat::isFree()
@@ -124,21 +124,31 @@ bool Boat::isFree()
 	return this->target == -1;
 }
 
-void Boat::nextAct(int harborNum)
+void Boat::nextAct(int harborNum, BoatPathPlanner* boatPathPlanner)
 {
-	//cerr << "next" << action[curAct] << endl;
-	if (curAct == action.size()) {
+	cerr << "status" << status << endl;
+	if (curAct == action.size() && status == MOVING) {
+		cerr << "dirvein" << endl;
+		cerr << "pos: " << pos << endl;
+		cerr << "dir:" << direction << endl;
+		boatPathPlanner->clearClps(BoatState(pos, direction), id);
+		cerr << "drivein-ok" << endl;
 		act(DRIVEIN);
 		if (target >= harborNum) {
 			preTarget = target;
 			target = -1;
-
 		}
+		curAct++;
 		return;
 	}
-	if (status == RECOVER)
-		return;
-	else if (status == MOVING) {
-		act(action[curAct++]);
+	else if (curAct < action.size()) {
+
+		if (status == RECOVER)
+			return;
+		else if (status == MOVING) {
+			if (boatPathPlanner->isOKNextMove(pos, direction, id, action[curAct])) {
+				act(action[curAct++]);
+			}
+		}
 	}
 }

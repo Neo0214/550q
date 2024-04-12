@@ -1,7 +1,11 @@
 ﻿#pragma once
+
+
+
 #include "defines.h"
 #include "Order.h"
 #include "Coord.h"
+class BoatPathPlanner;
 #define MOVING 0
 #define RECOVER 1
 #define LOADING 2
@@ -26,7 +30,7 @@ private:
 	vector<int> action;
 	int curAct;
 	bool force;
-	int target; // 港口id---------售卖id
+	vector<int> target; // 港口id---------售卖id
 	int preTarget;
 	bool isFirst = true;
 	// 私有函数
@@ -54,5 +58,5 @@ public:
 	void rot(int rotDirect);
 	void forward();
 	bool isFree();
-	void nextAct(int harborNum);
+	void nextAct(int harborNum, BoatPathPlanner* boatPathPlanner);
 };

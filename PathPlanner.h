@@ -1,43 +1,45 @@
-#pragma once
+ï»¿#pragma once
 #include "defines.h"
 #include "Map.h"
 #include "Coord.h"
 
 struct Path
 {
-	Coord lastCoord; // ÉÏÒ»µãµÄ×ø±ê
-	int move; // ´ÓÉÏÒ»µãµ½¸ÃµãµÄÒÆ¶¯·½Ïò
-	int distance; // ´Ó¸Û¿Úµ½¸ÃµãµÄ¾àÀë
-	Path():move(-1),distance(-1) {}; // ¾àÀë³õÊ¼»¯Îª-1
+	Coord lastCoord; // ä¸Šä¸€ç‚¹çš„åæ ‡
+	int move; // ä»ä¸Šä¸€ç‚¹åˆ°è¯¥ç‚¹çš„ç§»åŠ¨æ–¹å‘
+	int distance; // ä»æ¸¯å£åˆ°è¯¥ç‚¹çš„è·ç¦»
+	Path() :move(-1), distance(-1) {}; // è·ç¦»åˆå§‹åŒ–ä¸º-1
 };
 
 
-class PathPlanner 
+class PathPlanner
 {
-// Ë½ÓĞÊı¾İ
+	// ç§æœ‰æ•°æ®
 private:
-	Path*** harborsPaths; // ´ÓËùÓĞ¸Û¿Úµ½ËùÓĞµãµÄÂ·¾¶
-	int harborNum; // ¸Û¿ÚÊıÁ¿
+	Path*** harborsPaths; // ä»æ‰€æœ‰æ¸¯å£åˆ°æ‰€æœ‰ç‚¹çš„è·¯å¾„
+	int harborNum; // æ¸¯å£æ•°é‡
 
-// Ë½ÓĞº¯Êı
+	// ç§æœ‰å‡½æ•°
 private:
-	// ËÑË÷´ÓstartCoord¿ªÊ¼µÄµ½ËùÓĞµãµÄÂ·¾¶
-	void searchAllPath(const char my_map[LEN][LEN],Coord startCoord, Path** path);
+	// æœç´¢ä»startCoordå¼€å§‹çš„åˆ°æ‰€æœ‰ç‚¹çš„è·¯å¾„
+	void searchAllPath(const char my_map[LEN][LEN], Coord startCoord, Path** path);
 
 
 public:
 	PathPlanner() {};
 
-	// ÒÔµØÍ¼³õÊ¼»¯Â·¾¶¹æ»®Æ÷»ñÈ¡Â·¾¶
+	// ä»¥åœ°å›¾åˆå§‹åŒ–è·¯å¾„è§„åˆ’å™¨è·å–è·¯å¾„
 	void initHarborPath(const char my_map[LEN][LEN], vector<Coord> harborCoords);
 
-	// »ñÈ¡´ÓsrcCoordµ½harborIdµÄÂ·¾¶
+	// è·å–ä»srcCoordåˆ°harborIdçš„è·¯å¾„
 	vector<int> getPathToHarbor(int harborId, Coord srcCoord);
 
-	// »ñÈ¡´ÓharborIdµ½destCoordµÄÂ·¾¶
+	// è·å–ä»harborIdåˆ°destCoordçš„è·¯å¾„
 	vector<int> getPathFromHarbor(int harborId, Coord destCoord);
 
-	// »ñÈ¡´ÓsrcCoordµ½harborIdµÄÂ·¾¶³¤¶È
+	// è·å–ä»srcCoordåˆ°harborIdçš„è·¯å¾„é•¿åº¦
 	int getDistanceToHarbor(int harborId, Coord srcCoord);
+
+	int getEffectiveArea(int harborId);
 
 };

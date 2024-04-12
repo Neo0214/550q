@@ -22,11 +22,15 @@ private:
 	int harborNum; // 港口数量
 	vector<Coord> robotBuyPlace; // 购买机器人处
 	vector<Coord> boatBuyPlace; // 购买船处
+
+	vector<int> robotBuyList; // 购买机器人处
+	vector<int> boatBuyList; // 购买船处
+
 	vector<Delivery> boatDeliveryPlace; // 交货处
 	int robotNum; // 机器人数量
 	PathPlanner pathPlanner; // 路径规划器
 	BoatPathPlanner boatPathPlanner; // 船的路径规划器
-	int boatNum; // 船的数量
+	int boatNum = 0; // 船的数量
 	int boatCapacity; // 船的容量
 	int minBackTime; // 最小回港时间
 	// 动态数据
@@ -36,8 +40,6 @@ private:
 	int startProductId = 0;
 	vector<int> harborWhoGotReceive; // 记录哪个港口在这一帧中接收了货物
 
-	//tmp variable
-	int isbuy;
 
 	// 私有函数
 	void findHarbor(int robotId); //找最近的港口
@@ -56,6 +58,11 @@ private:
 	int getValue(int canLoadNum, int harborId, int& loadFrame);
 	bool timeOKFromDelivery(int deliveryId, int harborId, int loadFrame);
 	bool timeOKFromHarbor(int harborIdOrigin, int harborId, int loadFrame);
+
+
+	vector<int> getRobotBuyList();
+	vector<int> getBoatBuyList();
+
 public:
 	Scheduler();
 

@@ -4,7 +4,6 @@ Scheduler::Scheduler() {
 #ifdef TIME_DEBUG
 	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 #endif // TIME_DEBUG
-	isbuy = 0;
 
 	map = Map();
 	this->robotNum = 0;
@@ -16,7 +15,7 @@ Scheduler::Scheduler() {
 			switch (line[j])
 			{
 			case BUY_SHIP_SPACE:
-				this->boatBuyPlace.push_back(Coord(i, j + 1));
+				this->boatBuyPlace.push_back(Coord(i, j));
 				break;
 
 			case BUY_ROBOT_SPACE:
@@ -60,7 +59,14 @@ Scheduler::Scheduler() {
 	this->boatPathPlanner = BoatPathPlanner(harborNum, boatDeliveryPlace.size());
 	this->boatPathPlanner.init(map.point, harbors, boatDeliveryPlace);
 
-
+	robotBuyList = getRobotBuyList();
+	for (int i = 0; i < robotBuyList.size(); i++)
+		cerr << robotBuyList[i] << ' ';
+	cerr << endl;
+	boatBuyList = getBoatBuyList();
+	for (int i = 0; i < boatBuyList.size(); i++)
+		cerr << boatBuyList[i] << ' ';
+	cerr << endl;
 
 	// 结尾
 	char end[100];
@@ -127,12 +133,29 @@ bool Scheduler::NextFrame() {
 	}
 
 	scanf("%d", &robotNum);
+	if (robotNum > robots.size())
+	{
+		for (int i = robots.size(); i < robotNum; i++)
+		{
+			robots.push_back(Robot(i, 0, 0));
+		}
+
+	}
 	for (int i = 0; i < robotNum; i++) {
 		int id, x, y, hasGoods;
 		scanf("%d %d %d %d", &id, &hasGoods, &x, &y);
 		robots[id].update(hasGoods, x, y);
 	}
+
+
 	scanf("%d", &this->boatNum);
+	if (boatNum > boats.size())
+	{
+		for (int i = boats.size(); i < boatNum; i++)
+		{
+			boats.push_back(Boat(i, boatCapacity));
+		}
+	}
 	for (int i = 0; i < boatNum; i++) {
 		int id, curCapacity, x, y, direction, status;
 		scanf("%d %d %d %d %d %d", &id, &curCapacity, &x, &y, &direction, &status);
@@ -227,15 +250,22 @@ void Scheduler::findProductAndHarbor(int robotId)
 
 
 void Scheduler::Update() {
+	//cerr << frame << endl;
 	//if (frame < 10)
 	//{
 	//	buyRobot(0);
 	//}
 	// 此处做决策，并输出指令
-	if (frame >= 2 && this->score >= 2000 && isbuy < 12) {
-		buyRobot(0);
-		isbuy++;
+	if (boatNum < boatBuyList.size()) {
+		buyBoat(boatNum);
 	}
+	if (robotNum < robotBuyList.size()) {
+		buyRobot(robotBuyList[robotNum]);
+	}
+
+
+
+
 
 	for (int i = 0; i < robotNum; i++)
 	{
@@ -250,6 +280,7 @@ void Scheduler::Update() {
 			findHarbor(i); // 第i个机器人去最近的港口 
 		}
 	}
+
 	//发出指令控制机器人移动
 	// 碰撞图初始化
 	int collisionMap[LEN][LEN] = { 0 };
@@ -382,19 +413,15 @@ void Scheduler::Update() {
 	}
 
 
-	if (frame == 1) {
-		buyBoat(0);
-	}
-
 	for (int i = 0; i < boatNum; i++) {
 		if (boats[i].isFree() && boats[i].status == MOVING) {
 			// 没有目标的空闲船
 			int targetId = findBestHarbor(boats[i]);
-			//cerr << "go to " << targetId << '\n';
+			//cerr << "boat 1 go to " << targetId << endl;
 			if (targetId >= harborNum) {
 				clearWhenBoatComeBack(i, boats[i].preTarget);
 				boats[i].target = targetId;
-				boats[i].action = boatPathPlanner.getPath(BoatState(boats[i].pos, boats[i].direction), targetId);
+				boats[i].action = boatPathPlanner.getPath(BoatState(boats[i].pos, boats[i].direction), targetId, i);
 				boats[i].curAct = 0;
 			}
 			else if (targetId != -1) {
@@ -407,13 +434,13 @@ void Scheduler::Update() {
 				{
 					synchronizeWhenSwitch(i, targetId);
 				}
-				boats[i].action = boatPathPlanner.getPath(BoatState(boats[i].pos, boats[i].direction), targetId);
+				boats[i].action = boatPathPlanner.getPath(BoatState(boats[i].pos, boats[i].direction), targetId, i);
 				boats[i].curAct = 0;
 			}
 		}
-		else if (!boats[i].isFree() && (boats[i].status == MOVING || boats[i].status == RECOVER)) {
+		else if (!boats[i].isFree() && (boats[i].status == MOVING/* || boats[i].status == RECOVER*/)) {
 			// 在去目标路上的船
-			boats[i].nextAct(harborNum);
+			boats[i].nextAct(harborNum, &boatPathPlanner);
 
 		}
 		else if (!boats[i].isFree() && boats[i].status == LOADING) {
@@ -669,14 +696,14 @@ void Scheduler::printDebug() {
 
 void Scheduler::buyBoat(int buyIndex)
 {
-	printf("lboat %d %d\n", boatBuyPlace[buyIndex].x, boatBuyPlace[buyIndex].y - 1);
-	boats.push_back(Boat(buyIndex, boatCapacity));
+	printf("lboat %d %d\n", boatBuyPlace[buyIndex].x, boatBuyPlace[buyIndex].y);
+	//boats.push_back(Boat(boatNum, boatCapacity));
 }
 
 void Scheduler::buyRobot(int buyIndex)
 {
 	printf("lbot %d %d\n", robotBuyPlace[buyIndex].x, robotBuyPlace[buyIndex].y);
-	robots.push_back(Robot(robotNum, robotBuyPlace[buyIndex].x, robotBuyPlace[buyIndex].y));
+	//robots.push_back(Robot(robotNum, robotBuyPlace[buyIndex].x, robotBuyPlace[buyIndex].y));
 }
 
 void Scheduler::setBestBerthCoord(Harbor& curHarbor, char my_map[LEN][LEN])
@@ -718,3 +745,294 @@ int Scheduler::hasBoat(int harborId)
 	}
 	return -1;
 }
+
+// 修改了这里
+vector<int> Scheduler::getRobotBuyList()
+{
+	// 计算各个连通区域中的港口
+	vector<vector<int>> connectedHarbors;
+	for (int i = 0; i < harborNum; i++)
+	{
+		int j;
+		for (j = 0; j < connectedHarbors.size(); j++)
+		{
+			if (pathPlanner.getDistanceToHarbor(i, harbors[connectedHarbors[j][0]].boatCoord) >= 0)
+			{
+				connectedHarbors[j].push_back(i);
+				break;
+			}
+		}
+		if (j == connectedHarbors.size())
+			connectedHarbors.push_back(vector<int>{i});
+	}
+
+	//// 打印各个连通区域中的港口
+	//cerr<<"connectedHarbors"<<endl;
+	//for (auto& connectedHarbor : connectedHarbors)
+	//{
+	//	for (auto& harborId : connectedHarbor)
+	//	{
+	//		cerr << harborId << ' ';
+	//	}
+	//	cerr << endl;
+	//}
+	//cerr << endl;
+
+	//计算各连通区域的有效面积
+	vector<int> effectArea;
+	for (auto& connectedHarbor : connectedHarbors)
+	{
+		effectArea.push_back(pathPlanner.getEffectiveArea(connectedHarbor[0]));
+	}
+	int effectAreaSum = accumulate(effectArea.begin(), effectArea.end(), 0);
+	//cerr<<"effectAreaSum" << effectAreaSum << endl;
+	//// 打印各连通区域的有效面积
+	//cerr << "effectArea" << endl;
+	//for (auto& area : effectArea)
+	//{
+	//	cerr << area << ' ';
+	//}
+	//cerr<< endl;
+
+	//计算机器人购买点所在的连通区域id
+	vector<int> robotBuyPlaceInPosition(robotBuyPlace.size(), -1);
+	for (int i = 0; i < robotBuyPlace.size(); i++)
+	{
+		for (int j = 0; j < connectedHarbors.size(); j++)
+		{
+			auto connectedHarbor = connectedHarbors[j];
+			if (pathPlanner.getDistanceToHarbor(connectedHarbor[0], robotBuyPlace[i]) != -1)
+			{ //第i个buyPlace位于第j个连通区内
+				robotBuyPlaceInPosition[i] = j;
+				//cerr << "place"<<i<<"in"<<j  << endl;
+				break;
+			}
+		}
+	}
+
+	// 计算每一个连通区域内有多少个机器人购买点
+	vector<int> robotBuyPlaceCount(connectedHarbors.size(), 0);
+	for (int i = 0; i < robotBuyPlace.size(); i++)
+	{
+		int conectedAreaId = robotBuyPlaceInPosition[i];
+		if (conectedAreaId != -1) // 机器人不在没有港口的区域内
+		{
+			robotBuyPlaceCount[conectedAreaId]++;
+		}
+	}
+
+	//计算机器人购买点到其最近的港口的距离
+	vector<int> robotBuyPlaceDistanceToHarbor(robotBuyPlace.size(), -1);
+	for (int i = 0; i < robotBuyPlace.size(); i++)
+	{
+		int minDistance = 10000;
+		int conectedAreaId = robotBuyPlaceInPosition[i];
+		if (conectedAreaId != -1) // 机器人不在没有港口的区域内
+		{
+			for (auto harborId : connectedHarbors[conectedAreaId])
+			{
+				int distance = pathPlanner.getDistanceToHarbor(harborId, robotBuyPlace[i]); //连通区域内的港口到购买点的距离
+				if (distance < minDistance)
+				{
+					minDistance = distance;
+				}
+			}
+			robotBuyPlaceDistanceToHarbor[i] = minDistance;
+		}
+	}
+
+	//每个连通区域内各个购买点按照距离计算排名
+	vector<int> robotBuyPlaceRank(robotBuyPlace.size(), -1);
+	for (int i = 0; i < robotBuyPlace.size(); i++)
+	{
+		int conectedAreaId = robotBuyPlaceInPosition[i];
+		if (conectedAreaId != -1) // 机器人不在没有港口的区域内
+		{
+			int rank = 0;
+			for (int j = 0; j < robotBuyPlace.size(); j++)
+			{
+				if (robotBuyPlaceInPosition[j] == conectedAreaId && robotBuyPlaceDistanceToHarbor[j] < robotBuyPlaceDistanceToHarbor[i] ||
+					(robotBuyPlaceDistanceToHarbor[j] == robotBuyPlaceDistanceToHarbor[i]) && j < i)
+				{
+					rank++;
+				}
+			}
+			robotBuyPlaceRank[i] = (1 << rank);
+		}
+	}
+
+
+
+
+	// 计算分配比例
+	vector<double> robotBuyPlaceProportion(robotBuyPlace.size(), 0);
+	for (int i = 0; i < robotBuyPlace.size(); i++)
+	{
+		int areaId = robotBuyPlaceInPosition[i];
+
+		if (areaId != -1)
+		{
+			robotBuyPlaceProportion[i] = (double(effectArea[areaId]) / effectAreaSum) * (1.0 / robotBuyPlaceRank[i] / (2 - 1.0 / robotBuyPlaceCount[areaId]));
+		}
+	}
+
+	//// 打印分配比例
+	//for (int i = 0; i < robotBuyPlace.size(); i++)
+	//{
+	//	cerr << robotBuyPlaceProportion[i] << ' ';
+	//}
+
+	int expectedRobotNum = effectAreaSum / 1900;
+
+	// 计算每个购买点的购买数量
+	vector<int> robotBuyPlacePurchaseNum(robotBuyPlace.size(), 0);
+	for (int i = 0; i < robotBuyPlace.size(); i++)
+	{
+		robotBuyPlacePurchaseNum[i] = robotBuyPlaceProportion[i] * expectedRobotNum;
+		//cerr<< robotBuyPlacePurchaseNum[i] << ' ';
+	}
+	//cerr << endl;
+
+	// 计算每个区域购买的机器人数量
+	vector<int> robotBuyPlaceCountSum(connectedHarbors.size(), 0);
+	for (int i = 0; i < robotBuyPlace.size(); i++)
+	{
+		int areaId = robotBuyPlaceInPosition[i];
+		if (areaId != -1)
+		{
+			robotBuyPlaceCountSum[areaId] += robotBuyPlacePurchaseNum[i];
+		}
+	}
+	// 如果购买数量为0，则买一个
+	for (int i = 0; i < robotBuyPlaceCountSum.size(); i++)
+	{
+		if (robotBuyPlaceCountSum[i] == 0)
+		{
+			auto buyPlaceIter = find(robotBuyPlaceInPosition.begin(), robotBuyPlaceInPosition.end(), i);
+			int id = buyPlaceIter - robotBuyPlaceInPosition.begin();
+			if (id != robotBuyPlace.size())
+				robotBuyPlacePurchaseNum[id]++;
+		}
+	}
+
+	int factualRobotNum = accumulate(robotBuyPlacePurchaseNum.begin(), robotBuyPlacePurchaseNum.end(), 0);
+	//cerr<< "factualRobotNum" << factualRobotNum << endl;
+
+
+	//生成一个购买数组
+	vector<int>purchaseList;
+	for (int i = 0; i < robotBuyPlace.size(); i++)
+	{
+		for (int j = 0; j < robotBuyPlacePurchaseNum[i]; j++)
+		{
+			purchaseList.push_back(i);
+		}
+	}
+
+	// 随机打乱购买数组
+	auto shuffleVector = [](std::vector<int>& vec) {
+		for (size_t i = vec.size() - 1; i > 0; --i) {
+			// 生成[0, i]范围内的随机数
+			size_t j = rand() % (i + 1);
+			// 交换元素
+			std::swap(vec[i], vec[j]);
+		}
+		};
+
+	// 调用lambda函数打乱向量
+	shuffleVector(purchaseList);
+
+	return purchaseList;
+}
+
+vector<int> Scheduler::getBoatBuyList()
+{
+	// 船的购买总个数为80/capacity
+	// 每个有港口的连通区域至少买一辆
+	// 每个连通区域只选取离港口最近的购买点买
+	// 最初时只买一辆船，在港口最多的海域买
+	// 第二艘在港口数次之的海域买
+		// 计算各个连通区域中的港口
+	vector<vector<int>> connectedHarbors;
+	for (int i = 0; i < harborNum; i++)
+	{
+		int j;
+		for (j = 0; j < connectedHarbors.size(); j++)
+		{
+			if (boatPathPlanner.getDistanceToHarbor(i, harbors[connectedHarbors[j][0]].boatCoord) >= 0)
+			{
+				connectedHarbors[j].push_back(i);
+				break;
+			}
+		}
+		if (j == connectedHarbors.size())
+			connectedHarbors.push_back(vector<int>{i});
+	}
+
+	//每个连通区域内找到距离港口最近的购买点
+	vector<int> nearestBuyPlace(connectedHarbors.size(), -1);
+	for (int i = 0; i < connectedHarbors.size(); i++)
+	{
+		int minDistance = 10000;
+		for (int j = 0; j < boatBuyPlace.size(); j++)
+		{
+			int distance = boatPathPlanner.getDistanceToHarbor(connectedHarbors[i][0], boatBuyPlace[j]);
+			if (distance < minDistance)
+			{
+				minDistance = distance;
+				nearestBuyPlace[i] = j;
+			}
+		}
+	}
+
+	//计算每个购买点的购买比例
+	vector<double> boatBuyPlaceProportion(boatBuyPlace.size(), 0);
+	for (int i = 0; i < boatBuyPlace.size(); i++)
+	{
+		int indexIn_nearestBuyPlace = find(nearestBuyPlace.begin(), nearestBuyPlace.end(), i) - nearestBuyPlace.begin();
+		if (indexIn_nearestBuyPlace != nearestBuyPlace.size())
+		{
+			boatBuyPlaceProportion[i] = double(connectedHarbors[indexIn_nearestBuyPlace].size()) / harborNum;
+		}
+	}
+
+	double expectedBoatNum = 1.0 / boatCapacity;
+	//计算每个购买点的购买数量
+	vector<int> boatBuyPlacePurchaseNum(boatBuyPlace.size(), 0);
+	for (int i = 0; i < boatBuyPlace.size(); i++)
+	{
+		cerr << boatBuyPlaceProportion[i] * expectedBoatNum << ' ';
+		boatBuyPlacePurchaseNum[i] = ceil(boatBuyPlaceProportion[i] * expectedBoatNum);
+		cerr << "num";
+		cerr << boatBuyPlacePurchaseNum[i] << ' ';
+	}
+
+	vector<pair<int, int>> boatBuyPlacePurchaseNumAndIndex;
+	for (int i = 0; i < boatBuyPlace.size(); i++)
+	{
+		boatBuyPlacePurchaseNumAndIndex.push_back(make_pair(boatBuyPlacePurchaseNum[i], i));
+	}
+	sort(boatBuyPlacePurchaseNumAndIndex.begin(), boatBuyPlacePurchaseNumAndIndex.end(), greater<pair<int, int>>());
+
+	//生成一个购买数组
+	vector<int>purchaseList;
+	while (1)
+	{
+		int i = 0;
+		for (i = 0; i < boatBuyPlacePurchaseNumAndIndex.size(); i++)
+		{
+			if (boatBuyPlacePurchaseNumAndIndex[i].first > 0)
+			{
+				purchaseList.push_back(boatBuyPlacePurchaseNumAndIndex[i].second);
+				boatBuyPlacePurchaseNumAndIndex[i].first--;
+			}
+			else
+				break;
+		}
+		if (i == 0)
+			break;
+	}
+
+	return purchaseList;
+}
+
