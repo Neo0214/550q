@@ -558,7 +558,7 @@ vector<int> Scheduler::findBestHarbor(Boat& boat)
 			int minDistance = INT_MAX;
 			for (int i = harborNum; i < harborNum + boatDeliveryPlace.size(); i++) {
 				int distance = boatPathPlanner.getDistance(BoatState(boat.pos, boat.direction), i);
-				if (distance < minDistance) {
+				if (distance > 0 && distance < minDistance) {
 					minDistance = distance;
 					bestId = i;
 				}
